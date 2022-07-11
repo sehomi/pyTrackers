@@ -67,7 +67,7 @@ def sample_patch_multiloc(im, poses, scales, image_sz, mode: str='replicate', ma
     # Get image patches
     im_patches = None
     patch_coords = None
-
+    
     for pos in poses:
         patch_iter, coord_iter = zip(*(sample_patch(im, pos, s*image_sz, image_sz, mode=mode,
                                                     max_scale_change=max_scale_change) for s in scales))

@@ -117,7 +117,7 @@ class DiMP(BaseTracker):
 
         # Compute classification scores
         scores_raw = self.classify_target(test_x)
-        print("*** ", scores_raw.cpu().detach().numpy().shape, sample_coords.cpu().detach().numpy().shape, im_patches.cpu().detach().numpy().shape, " ***")
+        # print("*** ", scores_raw.cpu().detach().numpy().shape, sample_coords.cpu().detach().numpy().shape, im_patches.cpu().detach().numpy().shape, " ***")
 
         # Localize the target
         translation_vec, scale_ind, s, flag = self.localize_target(scores_raw, sample_pos, sample_scales)

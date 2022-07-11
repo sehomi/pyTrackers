@@ -7,7 +7,7 @@ from pytracking.tracker.base import BaseTracker
 from pytracking import dcf, TensorList
 from pytracking.features.preprocessing import numpy_to_torch
 from pytracking.utils.plotting import plot_graph
-from pytracking.features.preprocessing import sample_patch_multiscale, sample_patch_transformed
+from pytracking.features.preprocessing import sample_patch_multiscale, sample_patch_multiloc, sample_patch_transformed
 from pytracking.features import augmentation
 from ltr.models.target_classifier.initializer import FilterInitializerZero
 from ltr.models.kys.utils import CenterShiftFeatures, shift_features
@@ -123,9 +123,12 @@ class KYS(BaseTracker):
 
         # ------- LOCALIZATION ------- #
         # Extract backbone features
-        backbone_feat, sample_coords, im_patches = self.extract_backbone_features(im, self.get_centered_sample_pos(FI=FI),
-                                                                                  self.target_scale * self.params.scale_factors,
-                                                                                  self.img_sample_sz)
+        backbone_feat, sample_coords, im_patches = self.extract_backbone_features_multiloc(im, self.get_centered_sample_pos(FI=FI),
+                                                                                    self.target_scale * self.params.scale_factors,
+                                                                                    self.img_sample_sz)
+
+        self._sample_coords = sample_coords.cpu().detach().numpy()
+
         # Extract classification features
         test_patch = im_patches[0].int()
         self.test_patch = test_patch
@@ -234,17 +237,33 @@ class KYS(BaseTracker):
     def get_centered_sample_pos(self, FI=None):
         """Get the center position for the new sample. Make sure the target is correctly centered."""
 
+        pos = []
         if FI is None:
-            pos = self.pos
+            pos.append(self.pos)
+            pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
+                         self.img_support_sz / (2*self.feature_sz)
         else:
-            pos = torch.Tensor([ FI[1]+FI[3]/2, FI[0]+FI[2]/2])
+            pos.append(self.pos)
+            pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
+                         self.img_support_sz / (2*self.feature_sz)
 
-        return pos + ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
-               self.img_support_sz / (2*self.feature_sz)
+            pos.append( torch.Tensor([ FI[1]+FI[3]/2, FI[0]+FI[2]/2]) )
+            pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
+                         self.img_support_sz / (2*self.feature_sz)
+
+        return pos
 
 
     def extract_backbone_features(self, im: torch.Tensor, pos: torch.Tensor, scales, sz: torch.Tensor):
         im_patches, patch_coords = sample_patch_multiscale(im, pos, scales, sz,
+                                                           mode=self.params.get('border_mode', 'replicate'),
+                                                           max_scale_change=self.params.get('patch_max_scale_change', None))
+        with torch.no_grad():
+            backbone_feat = self.net.extract_backbone(im_patches)
+        return backbone_feat, patch_coords, im_patches
+
+    def extract_backbone_features_multiloc(self, im: torch.Tensor, poses, scales, sz: torch.Tensor):
+        im_patches, patch_coords = sample_patch_multiloc(im, poses, scales, sz,
                                                            mode=self.params.get('border_mode', 'replicate'),
                                                            max_scale_change=self.params.get('patch_max_scale_change', None))
         with torch.no_grad():
@@ -267,7 +286,7 @@ class KYS(BaseTracker):
             return self.net.get_motion_feat(backbone_feat)
 
     def init_motion_module(self, im):
-        backbone_feat, sample_coords, im_patches = self.extract_backbone_features(im, self.get_centered_sample_pos(),
+        backbone_feat, sample_coords, im_patches = self.extract_backbone_features_multiloc(im, self.get_centered_sample_pos(),
                                                                                   self.target_scale * self.params.scale_factors,
                                                                                   self.img_sample_sz)
 
