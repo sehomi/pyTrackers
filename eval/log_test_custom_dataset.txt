@@ -1,0 +1,1 @@
+[2021-09-10 20:05:47,989-rk0-get_custom_dataset_result.py#193] Namespace(dataset='custom_dataset', gt=False, log='log_test_custom_dataset.txt', visualization=True)

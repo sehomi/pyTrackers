@@ -1,0 +1,12 @@
+cupy
+matplotlib
+mxnet #via pip necessarily then maybe urllib3 and charset-normalizer via conda
+numba
+scipy
+h5py
+colorama
+opencv_python
+Cython
+numpy
+tqdm
+Pillow

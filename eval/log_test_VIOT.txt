@@ -1,0 +1,30 @@
+[2022-02-20 21:08:17,729-rk0-get_custom_dataset_result.py#197] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:13:40,066-rk0-get_custom_dataset_result.py#197] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:14:04,532-rk0-get_custom_dataset_result.py#197] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:14:38,062-rk0-get_custom_dataset_result.py#197] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:34:31,447-rk0-get_custom_dataset_result.py#203] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:50:44,595-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:51:30,842-rk0-get_custom_dataset_result.py#214] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:55:46,552-rk0-get_custom_dataset_result.py#214] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:56:46,093-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:57:23,093-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-20 21:58:40,274-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 14:45:45,644-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 14:48:01,658-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 14:54:11,248-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 14:54:46,033-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 14:55:05,014-rk0-get_custom_dataset_result.py#199] (1) Video: log_2022_02_15_16_44_45 Time: 0.4s Speed: 679.5fps Lost: 26 Tracker:MOSSE
+[2022-02-21 14:55:05,014-rk0-get_custom_dataset_result.py#230] Total Lost: 26
+[2022-02-21 14:55:05,014-rk0-get_custom_dataset_result.py#232] Mean Speed: 679.53 FPS
+[2022-02-21 15:01:16,844-rk0-get_custom_dataset_result.py#212] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 15:01:50,644-rk0-get_custom_dataset_result.py#213] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 15:02:10,222-rk0-get_custom_dataset_result.py#200] (1) Video: log_2022_02_15_16_44_45 Time: 0.4s Speed: 698.5fps Lost: 25 Tracker:MOSSE
+[2022-02-21 15:02:10,223-rk0-get_custom_dataset_result.py#231] Total Lost: 25
+[2022-02-21 15:02:10,223-rk0-get_custom_dataset_result.py#233] Mean Speed: 698.53 FPS
+[2022-02-21 15:02:40,753-rk0-get_custom_dataset_result.py#213] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 15:03:11,597-rk0-get_custom_dataset_result.py#213] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 15:36:36,902-rk0-compare_trackers.py#176] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
+[2022-02-21 15:36:39,424-rk0-compare_trackers.py#163] (1) Video: log_2022_02_15_16_44_45 Time: 0.5s Speed: 588.1fps Lost: 0 Tracker:MOSSE
+[2022-02-21 15:36:39,424-rk0-compare_trackers.py#197] Total Lost: 0
+[2022-02-21 15:36:39,425-rk0-compare_trackers.py#199] Mean Speed: 588.08 FPS
+[2022-02-21 15:37:55,493-rk0-compare_trackers.py#176] Namespace(dataset='VIOT', gt=False, log='log_test_VIOT.txt', visualization=True)
