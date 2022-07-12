@@ -5,7 +5,7 @@ import math
 import time
 from pytracking import dcf, TensorList
 from pytracking.features.preprocessing import numpy_to_torch
-from pytracking.features.preprocessing import sample_patch_multiscale, sample_patch_transformed
+from pytracking.features.preprocessing import sample_patch_multiscale, sample_patch_multiloc, sample_patch_transformed
 from pytracking.features import augmentation
 from ltr.models.layers import activation
 
@@ -151,9 +151,12 @@ class ToMP(BaseTracker):
         # ------- LOCALIZATION ------- #
 
         # Extract backbone features
-        backbone_feat, sample_coords, im_patches = self.extract_backbone_features(im, self.get_centered_sample_pos(FI=FI),
-                                                                      self.target_scale * self.params.scale_factors,
-                                                                      self.img_sample_sz)
+        backbone_feat, sample_coords, im_patches = self.extract_backbone_features_multiloc(im, self.get_centered_sample_pos(FI=FI),
+                                                                                           self.target_scale * self.params.scale_factors,
+                                                                                           self.img_sample_sz)
+
+        self._sample_coords = sample_coords.cpu().detach().numpy()
+
         # Extract classification features
         test_x = self.get_backbone_head_feat(backbone_feat)
 
@@ -161,7 +164,15 @@ class ToMP(BaseTracker):
         sample_pos, sample_scales = self.get_sample_location(sample_coords)
 
         # Compute classification scores
-        scores_raw, bbox_preds = self.classify_target(test_x)
+        scores_raw, bbox_preds = [], []
+        for i in range(test_x.size()[0]):
+          new_test_x = test_x[i,:,:,:]
+          new_test_x = new_test_x[None,:,:,:]
+          scores_raw_i, bbox_preds_i = self.classify_target(new_test_x)
+          scores_raw.append(scores_raw_i)
+          bbox_preds.append(bbox_preds_i)
+
+        scores_raw, bbox_preds = torch.cat(scores_raw), torch.cat(bbox_preds)
 
         translation_vec, scale_ind, s, flag, score_loc = self.localize_target(scores_raw, sample_pos, sample_scales)
 
@@ -288,13 +299,21 @@ class ToMP(BaseTracker):
     def get_centered_sample_pos(self, FI=None):
         """Get the center position for the new sample. Make sure the target is correctly centered."""
 
+        pos = []
         if FI is None:
-            pos = self.pos
+            pos.append(self.pos)
+            pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
+                         self.img_support_sz / (2*self.feature_sz)
         else:
-            pos = torch.Tensor([ FI[1]+FI[3]/2, FI[0]+FI[2]/2])
+            pos.append(self.pos)
+            pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
+                         self.img_support_sz / (2*self.feature_sz)
 
-        return pos + ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
-               self.img_support_sz / (2*self.feature_sz)
+            pos.append( torch.Tensor([ FI[1]+FI[3]/2, FI[0]+FI[2]/2]) )
+            pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
+                         self.img_support_sz / (2*self.feature_sz)
+
+        return pos
 
     def classify_target(self, sample_x: TensorList):
         """Classify target by applying the DiMP filter."""
@@ -429,6 +448,14 @@ class ToMP(BaseTracker):
 
     def extract_backbone_features(self, im: torch.Tensor, pos: torch.Tensor, scales, sz: torch.Tensor):
         im_patches, patch_coords = sample_patch_multiscale(im, pos, scales, sz,
+                                                           mode=self.params.get('border_mode', 'replicate'),
+                                                           max_scale_change=self.params.get('patch_max_scale_change', None))
+        with torch.no_grad():
+            backbone_feat = self.net.extract_backbone(im_patches)
+        return backbone_feat, patch_coords, im_patches
+
+    def extract_backbone_features_multiloc(self, im: torch.Tensor, poses, scales, sz: torch.Tensor):
+        im_patches, patch_coords = sample_patch_multiloc(im, poses, scales, sz,
                                                            mode=self.params.get('border_mode', 'replicate'),
                                                            max_scale_change=self.params.get('patch_max_scale_change', None))
         with torch.no_grad():
