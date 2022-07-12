@@ -7,9 +7,9 @@ except:
 
 if IN_COLAB:
     print("**** in colab ****")
-    if "/content/pyCFTrackers" not in sys.path:
+    if "/content/pyTrackers" not in sys.path:
         print("**** path not set ****")
-        sys.path.insert(0, "/content/pyCFTrackers")
+        sys.path.insert(0, "/content/pyTrackers")
         print(sys.path)
 
 import json

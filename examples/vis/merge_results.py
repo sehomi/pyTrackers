@@ -7,9 +7,9 @@ except:
 
 if IN_COLAB:
     print("**** in colab ****")
-    if "/content/pyCFTrackers" not in sys.path:
+    if "/content/pyTrackers" not in sys.path:
         print("**** path not set ****")
-        sys.path.insert(0, "/content/pyCFTrackers")
+        sys.path.insert(0, "/content/pyTrackers")
         print(sys.path)
 
 import json
@@ -30,7 +30,10 @@ for file_name in dir_list:
 
     splitted_file_name = file_name.split("_")
 
-    if "viot" in file_name:
+    if ".txt" in file_name or ".mp4" in file_name:
+        continue
+
+    if not "viot" in file_name:
         continue
 
     tracker = splitted_file_name[0]
@@ -65,6 +68,6 @@ for file_name in dir_list:
             viot_results[key][k] = results[key][k]
 
 json_content = json.dumps(viot_results, default=str)
-f = open('../all_results.json', 'w')
+f = open('../all_results_viot1.json', 'w')
 f.write(json_content)
 f.close()
