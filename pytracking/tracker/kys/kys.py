@@ -2,7 +2,9 @@ import torch
 import torch.nn
 import torch.nn.functional as F
 import math
+import numpy as np
 import time
+from collections import OrderedDict
 from pytracking.tracker.base import BaseTracker
 from pytracking import dcf, TensorList
 from pytracking.features.preprocessing import numpy_to_torch
@@ -142,7 +144,23 @@ class KYS(BaseTracker):
         scores_dimp = self.classify_target(test_x)
 
         # Compute fused score using the motion module
-        scores_fused, motion_feat, new_state_vector = self.get_response_prediction(backbone_feat, scores_dimp)
+        scores_fused = []
+        motion_feat = []
+        new_state_vector = []
+
+        for i in range(scores_dimp.size()[0]):
+          scores_dimp_i = scores_dimp[i,:,:,:]
+          backbone_feat_i = OrderedDict()
+          for key in backbone_feat.keys():
+            backbone_feat_i[key] = backbone_feat[key][i,:,:,:]
+          scores_fused_i, motion_feat_i, new_state_vector_i = self.get_response_prediction(backbone_feat_i, scores_dimp_i)
+          scores_fused.append(scores_fused_i)
+          motion_feat.append(motion_feat_i)
+          new_state_vector.append(new_state_vector_i)
+
+        scores_fused = torch.cat(scores_fused)
+        motion_feat = torch.cat(motion_feat)
+        new_state_vector = torch.cat(new_state_vector)
 
         # Localize the target
         translation_vec, scale_ind, s, flag = self.localize_target(scores_fused, scores_dimp, sample_scales)
@@ -357,47 +375,62 @@ class KYS(BaseTracker):
 
         return scores_am, motion_feat, new_state_vector
 
-    def localize_target(self, score_fused, score_dimp, sample_scales):
+    def localize_target(self, scores_fused, scores_dimp, sample_scales):
         """Run the target localization."""
-        if score_fused is not None:
-            score_fused = score_fused[0]
-        score_dimp = score_dimp[0]
 
-        # Apply window function
-        if self.output_window is not None and score_fused is not None:
-            score_dimp_win = score_dimp * self.output_window
-        else:
-            score_dimp_win = score_dimp
+        translation_vec_list = []
+        scale_ind_list = []
+        scores_list = []
+        flag_list = []
+        max_scores_list = []
 
-        max_dimp_score = score_dimp.max().item()
-        max_id = score_fused.view(-1).argmax()
+        for i in range(scores_fused.shape[0]):
+          if scores_fused is not None:
+            score_fused = scores_fused[i]
+          score_dimp = scores_dimp[i]
 
-        dimp_score_at_loc = score_dimp_win.view(-1)[max_id].item()
-        self.debug_info['dimp_score_at_loc'] = dimp_score_at_loc
-        self.debug_info['max_dimp_score'] = max_dimp_score
+          # Apply window function
+          if self.output_window is not None and score_fused is not None:
+              score_dimp_win = score_dimp * self.output_window
+          else:
+              score_dimp_win = score_dimp
 
-        loc_params = {'target_not_found_threshold': self.params.target_not_found_threshold_fused}
+          max_dimp_score = score_dimp.max().item()
+          max_id = score_fused.view(-1).argmax()
 
-        translation_vec, scale_ind, scores, max_dimp_score, flag, max_disp1 = self.compute_target_location(
-            score_fused, loc_params, sample_scales, score_dimp_win)
+          dimp_score_at_loc = score_dimp_win.view(-1)[max_id].item()
+          self.debug_info['dimp_score_at_loc'] = dimp_score_at_loc
+          self.debug_info['max_dimp_score'] = max_dimp_score
 
-        self.debug_info['fused_score'] = max_dimp_score
-        self.debug_info['fused_flag'] = flag
+          loc_params = {'target_not_found_threshold': self.params.target_not_found_threshold_fused}
+          
+          translation_vec, scale_ind, scores, max_dimp_score, flag, max_disp1 = self.compute_target_location(
+              score_fused, loc_params, sample_scales, score_dimp_win)
+          
+          translation_vec_list.append(translation_vec)
+          scale_ind_list.append(scale_ind)
+          scores_list.append(scores)
+          flag_list.append(flag)
+          max_scores_list.append(max_dimp_score)
 
-        if self.params.get('perform_hn_mining_dimp', False) and flag != 'not_found':
-            hn_flag = self.perform_hn_mining_dimp(score_dimp, max_disp1, sample_scales)
+          self.debug_info['fused_score'] = max_dimp_score
+          self.debug_info['fused_flag'] = flag
 
-            if hn_flag:
-                flag = 'hard_negative'
+          if self.params.get('perform_hn_mining_dimp', False) and flag != 'not_found':
+              hn_flag = self.perform_hn_mining_dimp(score_dimp, max_disp1, sample_scales)
 
-        return translation_vec, scale_ind, scores, flag
+              if hn_flag:
+                  flag = 'hard_negative'
+
+        idx = np.argmax(max_scores_list)
+        return translation_vec_list[idx], scale_ind_list[idx], scores_list[idx], flag_list[idx]
 
     def compute_target_location(self, scores, loc_params, sample_scales, scores_dimp=None):
         sample_scale = sample_scales[0]
 
         max_score1, max_disp1 = dcf.max2d(scores)
         _, scale_ind = torch.max(max_score1, dim=0)
-        max_score1 = max_score1[scale_ind]
+        # max_score1 = max_score1[scale_ind]
         max_disp1 = max_disp1[scale_ind,...].float().cpu().view(-1)
 
         if scores_dimp is not None:
