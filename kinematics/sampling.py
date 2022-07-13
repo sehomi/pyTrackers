@@ -18,13 +18,13 @@ class TrajectorySampler:
         dist = np.sum( np.sqrt( np.sum( (trj2[0:min_len,:] - trj1[0:min_len,:])**2, axis=1) ) )
         return dist
 
-    def sample_gaussian_trajectories(self, poses):
+    def sample_gaussian_trajectories(self, poses, vis=False):
         x_hist = poses[:,0]
         y_hist = poses[:,1]
 
-        fig, ax = plt.subplots()
-
-        ax.plot(x_hist, y_hist, 'y-', lw=2, label='history')
+        if vis:
+            fig, ax = plt.subplots()
+            ax.plot(x_hist, y_hist, 'y-', lw=2, label='history')
 
         f = np.polyfit(x_hist, y_hist, 2)
         p = np.poly1d(f)
@@ -55,8 +55,9 @@ class TrajectorySampler:
             elif ds >= 3 and len(ext_tr) == 2:
                 ext_tr.append([x, p(x)])
             
-        ax.plot(x_hist, p(x_hist), 'r-', lw=2, label='history')
-        ax.plot(xs, p(xs), 'r-', lw=2, label='history')
+        if vis:
+            ax.plot(x_hist, p(x_hist), 'r-', lw=2, label='history')
+            ax.plot(xs, p(xs), 'r-', lw=2, label='history')
 
         ext_tr = np.array(ext_tr).astype(np.float64)
         ext_pts = np.concatenate( ( np.array(xs).reshape((len(xs),1)), p(xs).reshape((len(xs),1)) ) , axis=1)
@@ -64,20 +65,24 @@ class TrajectorySampler:
         trs = []
         ptss = []
         probs = []
+        end_points = []
         for i in range(20):
             pts, tr = self.sample_cubic_bspline( (x_hist, y_hist), ext_tr )
             probs.append( self.traj_distance(pts, ext_pts) )
             ptss.append(pts)
             trs.append(tr)
+            end_points.append(pts[-1,:])
         probs = probs / np.sum(probs)
 
-        for i in range(pts.shape[0]):
-            redness = probs[i] / np.max(probs)
-            ax.plot(ptss[i][:,0], ptss[i][:,1], color=(redness,0,(1-redness)), lw=2)
+        if vis:
+            for i in range(pts.shape[0]):
+                min_prob = np.min(probs)
+                redness = (probs[i]-min_prob) / np.max(probs-min_prob)
+                ax.plot(ptss[i][:,0], ptss[i][:,1], color=(redness,0,(1-redness)), lw=2)
+            ax.grid(True)
+            plt.savefig('sample.png')
 
-        ax.grid(True)
-
-        plt.savefig('sample.png')
+        return end_points, probs, ptss
 
     def sample_cubic_bspline(self, hist, tr_last):
         x_hist = hist[0]
@@ -99,13 +104,13 @@ class TrajectorySampler:
 
         return self._curve_points, tr_new
 
+if __name__ == "__main__":
+    ts = TrajectorySampler()
 
-ts = TrajectorySampler()
+    x_hist = np.linspace(0, 4, 40)
+    x_hist = np.flipud(x_hist)
+    x_hist = x_hist.reshape((x_hist.shape[0],1))
+    y_hist = -0.4*x_hist**2 + 0.1*x_hist**3
 
-x_hist = np.linspace(0, 4, 40)
-x_hist = np.flipud(x_hist)
-x_hist = x_hist.reshape((x_hist.shape[0],1))
-y_hist = -0.4*x_hist**2 + 0.1*x_hist**3
-
-ts.sample_gaussian_trajectories( np.concatenate(( x_hist, y_hist, np.zeros(x_hist.shape) ), axis=1) )
+    ts.sample_gaussian_trajectories( np.concatenate(( x_hist, y_hist, np.zeros(x_hist.shape) ), axis=1), vis=True )
 

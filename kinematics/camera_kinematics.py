@@ -7,6 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from lib.utils import plot_kinematics
 import matplotlib.pyplot as plt
 from kinematics.utils import gps_to_ned, make_DCM
+from kinematics.sampling import TrajectorySampler
 
 class CameraKinematics:
 
@@ -35,9 +36,11 @@ class CameraKinematics:
         self._interp_factor = factor
         self._diff_buff = []
         self._pos_buff = []
-        self._pos_est = None
+        self._pos_est = []
         self._pos_buff_size = 40
         self._last_target_states = [False]
+
+        self._ts = TrajectorySampler()
 
         self._vis=vis
         if vis:
@@ -173,7 +176,7 @@ class CameraKinematics:
             return vector
         
 
-    def updateRect3D(self, states, ref, image, rect=None):
+    def updateRect3D(self, states, ref, image, rect=None, gaussian_sampler=False):
 
         if rect is not None:
             self._last_rect = rect
@@ -236,21 +239,6 @@ class CameraKinematics:
                 del self._last_target_states[0]
                 self._last_target_states.append(True)
 
-        vs = []
-        for i in range(1, len(self._pos_buff)):
-
-            t0 = self._pos_buff[i-1][0]
-            pos0 = self._pos_buff[i-1][1:4]
-
-            t = self._pos_buff[i][0]
-            pos = self._pos_buff[i][1:4]
-
-            dx = np.array(pos) - np.array(pos0)
-            dt = t-t0
-
-            if dt < 1 and dt!=0:
-                vs.append(dx/dt)
-
         for data in self._pos_buff:
 
             pos = data[1:4]
@@ -273,216 +261,60 @@ class CameraKinematics:
             p2 = (int(center_est[0]+1), int(center_est[1]+1))
             image = cv.rectangle(image, p1, p2, (0, 255, 255),2)
 
-        if len(vs)>0:
-            v = np.mean(vs,0)
-            dt = states[0] - self._pos_buff[-2][0]
-            self._pos_est = self._pos_buff[-1][1:4] + self._interp_factor*v*dt
+        if not gaussian_sampler:
+            vs = []
+            for i in range(1, len(self._pos_buff)):
 
-        if self._pos_est is None:
-            return self._last_rect
+                t0 = self._pos_buff[i-1][0]
+                pos0 = self._pos_buff[i-1][1:4]
 
-        inertia_dir = self._pos_est - cam_pos
-        if np.linalg.norm(inertia_dir) != 0:
+                t = self._pos_buff[i][0]
+                pos = self._pos_buff[i][1:4]
 
-            inertia_dir = inertia_dir / np.linalg.norm(inertia_dir)
+                dx = np.array(pos) - np.array(pos0)
+                dt = t-t0
 
-            ## convert new estimate of target direction vector to body coordinates
-            body_dir_est = self.inertia_to_body( inertia_dir, imu_meas)
+                if dt < 1 and dt!=0:
+                    vs.append(dx/dt)
 
-            ## convert body to cam coordinates
-            cam_dir_est = self.body_to_cam(body_dir_est)
-
-            cam_dir_est = self.limit_vector_to_fov(cam_dir_est)
-
-            ## reproject to image plane
-            center_est = self.from_direction_vector(cam_dir_est, self._cx, self._cy, self._f)
-
-        ## if target and it's track is lost search image center
-        # if len(vs)==0:
-        #     center_est = [int(self._cx), int(self._cy)]
-
-        ## estimated rectangle
-        rect_est = (int(center_est[0]-self._last_rect[2]/2), \
-                    int(center_est[1]-self._last_rect[3]/2),
-                    self._last_rect[2], self._last_rect[3])
-        # image = cv.putText(image, '{:d}, {:d}, {:d}'.format(center_est[0], center_est[1], len(vs)), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 
-        #                    1, (0,255,255), 2, cv.LINE_AA)
-
-        return rect_est
-
-
-    def updateRectSphere(self, imu_meas, rect=None):
-
-        if rect is not None:
-            self._last_rect = rect
-
-        ## convert target from a rect in "image coordinates" to a vector
-        ## in "camera body coordinates"
-        body_dir = self.cam_to_body(rect)
-
-        ## convert target from a vector in "camera body coordinates" to a vector
-        ## in "inertial coordinates"
-        inertia_dir = self.body_to_inertia(body_dir, imu_meas)
-
-        ## represent inertia_dir in spherecal coordinates
-        inertia_dir_sp = self.toSpherecalCoords(inertia_dir)
-
-        if self._init:
-            diff=np.array([0.0, 0.0, 0.0])
-            if inertia_dir is not None:
-                ## find the difference between new observation (inertia_dir) and last
-                ## known direction (self._inertia_dir_before)
-                diff = np.array([0.0, self.angleDifference(inertia_dir_sp[1], self._inertia_dir_before[1]), \
-                                      self.angleDifference(inertia_dir_sp[2], self._inertia_dir_before[2])])
-
-
-            ## if target is just found, empty the observation buffer to prevent
-            ## oscilations around target
-            if inertia_dir is not None and all(~np.array(self._last_target_states)):
-                self._diff_buff = []
-
-            ## make the differences smooth overtime by a moving average. this adds a dynamic to target
-            ## direction vector.
-            if len(self._diff_buff) > -self._interp_factor:
-                del self._diff_buff[0]
-                self._diff_buff.append(diff)
-            else:
-                self._diff_buff.append(diff)
-
-            ## if target just disappeared, eliminate some of the last buffered observations,
-            ## because target's box is having misleading shakes before being lost
-            if inertia_dir is None and self._last_target_states[-1]:
-                for i in range( int(0.4*len(self._diff_buff)) ):
-                    del self._diff_buff[-1]
-
-            ## record last target states
-            if inertia_dir is None:
-                if len(self._last_target_states) < 3:
-                    self._last_target_states.append(False)
+            if len(vs)>0:
+                v = np.mean(vs,0)
+                dt = states[0] - self._pos_buff[-2][0]
+                if len(self._pos_est) == 0:
+                    self._pos_est.append( self._pos_buff[-1][1:4] + self._interp_factor*v*dt )
                 else:
-                    del self._last_target_states[0]
-                    self._last_target_states.append(False)
-            else:
-                if len(self._last_target_states) < 3:
-                    self._last_target_states.append(True)
-                else:
-                    del self._last_target_states[0]
-                    self._last_target_states.append(True)
+                    self._pos_est[0] = self._pos_buff[-1][1:4] + self._interp_factor*v*dt 
 
-            self._diff = np.mean(self._diff_buff, 0)
-
-            ## calculate new estimate for target's direction vector
-            self._inertia_dir_after = self._inertia_dir_before + self._diff
-
-            ## save this new estimate as last known direction in the memory
-            self._inertia_dir_before = self._inertia_dir_after.copy()
-
+            if len(self._pos_est) == 0:
+                return [tuple(self._last_rect)]
+        
         else:
+            self._pos_est, probs, ptss = self._ts.sample_gaussian_trajectories( np.array(self._pos_buff)[:,1:4] )
+            self._pos_est = [np.array([p[0], p[1], 0.0]) for p in self._pos_est]
 
-            if inertia_dir is not None:
-                ## initialize with first observation
-                self._inertia_dir_before = inertia_dir_sp.copy()
-                self._inertia_dir_after = inertia_dir_sp.copy()
-                self._diff = np.array([0.0,0.0,0.0])
+        rect_ests = []
+        for pos_est in self._pos_est:
+            inertia_dir = pos_est - cam_pos
+            if np.linalg.norm(inertia_dir) != 0:
 
-                self._init = True
-            else:
-                return None
+                inertia_dir = inertia_dir / np.linalg.norm(inertia_dir)
 
-        ## convert back to cartesian coordinates
-        inertia_dir_after_ca = self.toCartesianCoords(self._inertia_dir_after)
+                ## convert new estimate of target direction vector to body coordinates
+                body_dir_est = self.inertia_to_body( inertia_dir, imu_meas)
 
-        if self._vis:
-            ## expressing camera frame by for vectors of its image corners in inertial
-            ## frame
-            corners = self.get_camera_frame_vecs(imu_meas,self._w,self._h)
-            plot_kinematics(imu_meas, inertia_dir_after_ca, self._ax_3d, corners)
+                ## convert body to cam coordinates
+                cam_dir_est = self.body_to_cam(body_dir_est)
 
-        ## convert new estimate of target direction vector to body coordinates
-        body_dir_est = self.inertia_to_body( inertia_dir_after_ca, imu_meas)
+                cam_dir_est = self.limit_vector_to_fov(cam_dir_est)
 
-        ## convert body to cam coordinates
-        cam_dir_est = self.body_to_cam(body_dir_est)
+                ## reproject to image plane
+                center_est = self.from_direction_vector(cam_dir_est, self._cx, self._cy, self._f)
 
-        ## reproject to image plane
-        center_est = self.from_direction_vector(cam_dir_est, self._cx, self._cy, self._f)
-
-        ## estimated rectangle
-        rect_est = (int(center_est[0]-self._last_rect[2]/2), \
-                    int(center_est[1]-self._last_rect[3]/2),
-                    self._last_rect[2], self._last_rect[3])
-
-        return rect_est
-
-    def updateRect(self, imu_meas, rect=None):
-
-        if rect is not None:
-            self._last_rect = rect
-
-        ## convert target from a rect in "image coordinates" to a vector
-        ## in "camera body coordinates"
-        body_dir = self.cam_to_body(rect)
-
-        ## convert target from a vector in "camera body coordinates" to a vector
-        ## in "inertial coordinates"
-        inertia_dir = self.body_to_inertia(body_dir, imu_meas)
-
-        if self._init:
-            ## update difference vector only in case of new observation
-            ## otherwise continue changing direction vector with last know
-            ## speed
-            diff=np.array([0.0,0.0,0.0])
-            if inertia_dir is not None:
-                ## find the difference between new observation (inertia_dir) and last
-                ## known direction (self._inertia_dir_before)
-                diff = inertia_dir - self._inertia_dir_before
-
-                ## make the differences smooth overtime. this add a dynamic to target
-                ## direction vector.
-                self._diff = self._interp_factor*self._diff + (1-self._interp_factor)*diff
-
-            ## calculate new estimate for target's direction vector
-            self._inertia_dir_after = self._inertia_dir_before + self._diff
-
-            ## ensure direction vector always has a length of 1
-            self._inertia_dir_after = self._inertia_dir_after/np.linalg.norm(self._inertia_dir_after)
-
-            ## save this new estimate as last known direction in the memory
-            self._inertia_dir_before = self._inertia_dir_after.copy()
-
-        else:
-
-            if inertia_dir is not None:
-                ## initialize with first observation
-                self._inertia_dir_before = inertia_dir
-                self._inertia_dir_after = inertia_dir
-                self._diff = np.array([0.0,0.0,0.0])
-
-                self._init = True
-            else:
-                return None
-
-        if self._vis:
-            ## expressing camera frame by for vectors of its image corners in inertial
-            ## frame
-            corners = self.get_camera_frame_vecs(imu_meas,self._w,self._h)
-            plot_kinematics(imu_meas,self._inertia_dir_after,self._ax_3d,corners)
-
-        ## convert new estimate of target direction vector to body coordinates
-        body_dir_est = self.inertia_to_body(self._inertia_dir_after,imu_meas)
-
-        ## convert body to cam coordinates
-        cam_dir_est = self.body_to_cam(body_dir_est)
-
-        ## reproject to image plane
-        center_est = self.from_direction_vector(cam_dir_est, self._cx, self._cy, self._f)
-
-        ## estimated rectangle
-        rect_est = (int(center_est[0]-self._last_rect[2]/2), \
-                    int(center_est[1]-self._last_rect[3]/2),
-                    self._last_rect[2], self._last_rect[3])
-
-        return rect_est
+            ## estimated rectangle
+            rect_ests.append( (int(center_est[0]-self._last_rect[2]/2), \
+                               int(center_est[1]-self._last_rect[3]/2),
+                               self._last_rect[2], self._last_rect[3]) )
+        return rect_ests
 
 
     def get_camera_frame_vecs(self, eul, w, h):

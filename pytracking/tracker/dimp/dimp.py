@@ -211,7 +211,7 @@ class DiMP(BaseTracker):
             pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
                          self.img_support_sz / (2*self.feature_sz)
                          
-            pos.append( torch.Tensor([ FI[1]+FI[3]/2, FI[0]+FI[2]/2]) )
+            pos.append( torch.Tensor([ FI[0][1]+FI[0][3]/2, FI[0][0]+FI[0][2]/2]) )
             pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
                          self.img_support_sz / (2*self.feature_sz)
 
