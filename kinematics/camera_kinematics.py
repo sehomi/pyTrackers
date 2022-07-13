@@ -292,6 +292,33 @@ class CameraKinematics:
             self._pos_est, probs, ptss = self._ts.sample_gaussian_trajectories( np.array(self._pos_buff)[:,1:4] )
             self._pos_est = [np.array([p[0], p[1], 0.0]) for p in self._pos_est]
 
+            print(self._pos_est, probs, ptss)
+            if len(probs)>=2:
+                probs = np.array(probs) - np.min(probs)
+                probs = probs / np.max(probs)
+            for i, pts in enumerate(ptss):
+                for pt in pts:
+
+                    pos = np.array([pt[0], pt[1], 0])
+                    inertia_dir = pos - cam_pos
+                    if np.linalg.norm(inertia_dir) == 0:
+                        continue
+
+                    inertia_dir = inertia_dir / np.linalg.norm(inertia_dir)
+
+                    ## convert new estimate of target direction vector to body coordinates
+                    body_dir_est = self.inertia_to_body( inertia_dir, imu_meas)
+
+                    ## convert body to cam coordinates
+                    cam_dir_est = self.body_to_cam(body_dir_est)
+
+                    ## reproject to image plane
+                    center_est = self.from_direction_vector(cam_dir_est, self._cx, self._cy, self._f)
+
+                    p1 = (int(center_est[0]-1), int(center_est[1]-1))
+                    p2 = (int(center_est[0]+1), int(center_est[1]+1))
+                    image = cv.rectangle(image, p1, p2, (255 - int(probs[i]*255), 0, int(probs[i]*255)),2)
+
         rect_ests = []
         for pos_est in self._pos_est:
             inertia_dir = pos_est - cam_pos

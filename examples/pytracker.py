@@ -334,9 +334,9 @@ class PyTracker:
 
                 ## estimating target location using kinematc model
                 if psr/psr0 > self.ratio_thresh:
-                    est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, bbox)
+                    est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, bbox, gaussian_sampler=True)
                 else:
-                    est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, None)
+                    est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, None, gaussian_sampler=True)
 
                 # print("psr ratio: ",psr/psr0, " learning: ", psr/psr0 > self.ratio_thresh, " est: ", est_loc)
 

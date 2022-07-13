@@ -19,6 +19,10 @@ class TrajectorySampler:
         return dist
 
     def sample_gaussian_trajectories(self, poses, vis=False):
+        if poses.shape[0] < 2:
+            res = [np.array([poses[0,0], poses[0,1]])]
+            return res, [1], [np.array(res)]
+
         x_hist = poses[:,0]
         y_hist = poses[:,1]
 
