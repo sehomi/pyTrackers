@@ -201,12 +201,13 @@ class CameraKinematics:
             ## calculate target pos
             target_pos = self.scale_vector(inertia_dir, cam_pos[2]) + cam_pos
 
-            ## if target is just found, empty the observation buffer to prevent
-            ## oscilations around target
-            if len(self._last_target_states) >= 5:
-                if np.sum( np.array(self._last_target_states[2:5]) ) >= 2  and \
-                   np.sum( np.array(self._last_target_states[0:3]) ) <= 1:
-                    self._pos_buff = []
+            if not gaussian_sampler:
+                ## if target is just found, empty the observation buffer to prevent
+                ## oscilations around target
+                if len(self._last_target_states) >= 5:
+                    if np.sum( np.array(self._last_target_states[2:5]) ) >= 2  and \
+                    np.sum( np.array(self._last_target_states[0:3]) ) <= 1:
+                        self._pos_buff = []
 
             ## buffer target positions
             if len(self._pos_buff) > self._pos_buff_size:
@@ -214,16 +215,13 @@ class CameraKinematics:
 
             self._pos_buff.append([states[0], target_pos[0], target_pos[1], target_pos[2]])
 
-            ## clear buffer after redetection
-            # if len(self._pos_buff) > 0:
-            #     if states[0] - self._pos_buff[-1][0] > 1.0:
-            #         self._pos_buff = []
 
-        ## if target just disappeared, eliminate some of the last buffered observations,
-        ## because target's box is having misleading shakes before being lost
-        if rect is None and self._last_target_states[-1]:
-            for i in range( int(0.2*len(self._pos_buff)) ):
-                del self._pos_buff[-1]
+        if not gaussian_sampler:
+            ## if target just disappeared, eliminate some of the last buffered observations,
+            ## because target's box is having misleading shakes before being lost
+            if rect is None and self._last_target_states[-1]:
+                for i in range( int(0.2*len(self._pos_buff)) ):
+                    del self._pos_buff[-1]
 
         ## record last target states
         if rect is None:
@@ -289,35 +287,47 @@ class CameraKinematics:
                 return [tuple(self._last_rect)]
         
         else:
-            self._pos_est, probs, ptss = self._ts.sample_gaussian_trajectories( np.array(self._pos_buff)[:,1:4] )
+            time_from_last_pose = states[0] - self._pos_buff[-1:0]
+            if len(time_from_last_pose) == 0:
+                time_from_last_pose = 0.1
+            self._pos_est, probs, ptss = self._ts.sample_gaussian_trajectories( np.array(self._pos_buff)[:,1:4], time_from_last_pose )
             self._pos_est = [np.array([p[0], p[1], 0.0]) for p in self._pos_est]
 
-            print(self._pos_est, probs, ptss)
+            # print(self._pos_est, probs, ptss)
             if len(probs)>=2:
                 probs = np.array(probs) - np.min(probs)
                 probs = probs / np.max(probs)
             for i, pts in enumerate(ptss):
-                for pt in pts:
+                for j in range(1,len(pts)):
+                    
+                    pt_old = pts[j-1]
+                    pt = pts[j]
 
+                    pos_pld = np.array([pt_old[0], pt_old[1], 0])
                     pos = np.array([pt[0], pt[1], 0])
+                    inertia_dir_old = pos_pld - cam_pos
                     inertia_dir = pos - cam_pos
-                    if np.linalg.norm(inertia_dir) == 0:
+                    if np.linalg.norm(inertia_dir) == 0 or np.linalg.norm(inertia_dir_old) == 0:
                         continue
 
+                    inertia_dir_old = inertia_dir_old / np.linalg.norm(inertia_dir_old)
                     inertia_dir = inertia_dir / np.linalg.norm(inertia_dir)
 
                     ## convert new estimate of target direction vector to body coordinates
+                    body_dir_est_old = self.inertia_to_body( inertia_dir_old, imu_meas)
                     body_dir_est = self.inertia_to_body( inertia_dir, imu_meas)
 
                     ## convert body to cam coordinates
+                    cam_dir_est_old = self.body_to_cam(body_dir_est_old)
                     cam_dir_est = self.body_to_cam(body_dir_est)
 
                     ## reproject to image plane
+                    center_est_old = self.from_direction_vector(cam_dir_est_old, self._cx, self._cy, self._f)
                     center_est = self.from_direction_vector(cam_dir_est, self._cx, self._cy, self._f)
 
-                    p1 = (int(center_est[0]-1), int(center_est[1]-1))
-                    p2 = (int(center_est[0]+1), int(center_est[1]+1))
-                    image = cv.rectangle(image, p1, p2, (255 - int(probs[i]*255), 0, int(probs[i]*255)),2)
+                    p1 = (int(center_est_old[0]), int(center_est_old[1]))
+                    p2 = (int(center_est[0]), int(center_est[1]))
+                    image = cv.line(image, p1, p2, (255 - int(probs[i]*255), 0, int(probs[i]*255)), 2)
 
         rect_ests = []
         for pos_est in self._pos_est:
