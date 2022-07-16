@@ -11,6 +11,8 @@ class TrajectorySampler:
         self._step_size = 0.1
         self._num_samples = 10
         self._vars = [0.5, 2, 5]
+        self._aug_vars = 0.8
+        self._std_thresh = 0.5
 
         self._curve.degree = 4
         self._curve.delta = self._step_size
@@ -20,67 +22,91 @@ class TrajectorySampler:
         dist = np.sum( np.sqrt( np.sum( (trj2[0:min_len,:] - trj1[0:min_len,:])**2, axis=1) ) )
         return dist
 
+    def create_augmented_poses(self, poses):
+        aug_data = np.random.normal(0.0, self._aug_vars, poses.shape)
+        aug_data[:,2] = 0
+
+        return poses+aug_data
+
     def sample_gaussian_trajectories(self, poses, dt, vis=False):
         if poses.shape[0] < 2:
             res = [np.array([poses[0,0], poses[0,1]])]
-            return res, [1], [np.array(res)]
+            return res, [1], [np.array(res)], []
 
         x_hist = poses[:,0]
         y_hist = poses[:,1]
+
+        std = np.linalg.norm( [np.std( x_hist ), np.std( y_hist )] )
+        mean = [np.mean( x_hist ), np.mean( y_hist )]
 
         if vis:
             fig, ax = plt.subplots()
             ax.plot(x_hist, y_hist, 'y-', lw=2, label='history')
 
-        f = np.polyfit(x_hist, y_hist, 2)
-        p = np.poly1d(f)
-        p_prime = p.deriv()
-        
-        s1 = np.array([x_hist[-1] - x_hist[-2], p(x_hist[-1]) - p(x_hist[-2]) ]) 
-        s1 = s1/np.linalg.norm(s1)
-
-        s2 = np.array([1, p_prime(x_hist[-1])])
-        s2 = s2/np.linalg.norm(s2)
-
-        sgn = np.sign( np.dot(s1, s2) )
-        if np.isnan(sgn): sgn = 1
-
-        ds = 0
-        x = x_hist[-1]
-        xs = [x_hist[-1]]
-        ext_tr = []
-        while ds < 3:
-            dx = sgn * np.cos( np.arctan( p_prime(x) ) )*self._step_size
-            ds += self._step_size
-            x += dx
-            xs.append(x)
-
-            if ds >= 1 and len(ext_tr) == 0:
-                ext_tr.append([x, p(x)])
-            elif ds >= 2 and len(ext_tr) == 1:
-                ext_tr.append([x, p(x)])
-            elif ds >= 3 and len(ext_tr) == 2:
-                ext_tr.append([x, p(x)])
+        aug_poses = []
+        if std > self._std_thresh:
+            aug_poses = self.create_augmented_poses(poses)
+            x_hist_aug = np.concatenate( (x_hist, aug_poses[:,0] ), axis=0 )
+            y_hist_aug = np.concatenate( (y_hist, aug_poses[:,1] ), axis=0 )
+            f = np.polyfit(x_hist_aug, y_hist_aug, 2)
+            p = np.poly1d(f)
+            p_prime = p.deriv()
             
-        if vis:
-            ax.plot(x_hist, p(x_hist), 'r-', lw=2, label='history')
-            ax.plot(xs, p(xs), 'r-', lw=2, label='history')
+            idx = int( len(x_hist)/2 ) + 1
+            s1 = np.array([x_hist[-1] - x_hist[-idx], p(x_hist[-1]) - p(x_hist[-idx]) ]) 
+            s1 = s1/np.linalg.norm(s1)
 
-        ext_tr = np.array(ext_tr).astype(np.float64)
-        ext_pts = np.concatenate( ( np.array(xs).reshape((len(xs),1)), p(xs).reshape((len(xs),1)) ) , axis=1)
+            s2 = np.array([1, p_prime(x_hist[-1])])
+            s2 = s2/np.linalg.norm(s2)
+
+            sgn = np.sign( np.dot(s1, s2) )
+            if np.isnan(sgn): sgn = 1
+
+            ds = 0
+            x = x_hist[-1]
+            xs = [x_hist[-1]]
+            ext_tr = []
+            while ds < 3:
+                dx = sgn * np.cos( np.arctan( p_prime(x) ) )*self._step_size
+                ds += self._step_size
+                x += dx
+                xs.append(x)
+
+                if ds >= 1 and len(ext_tr) == 0:
+                    ext_tr.append([x, p(x)])
+                elif ds >= 2 and len(ext_tr) == 1:
+                    ext_tr.append([x, p(x)])
+                elif ds >= 3 and len(ext_tr) == 2:
+                    ext_tr.append([x, p(x)])
+                
+            if vis:
+                ax.plot(x_hist, p(x_hist), 'r-', lw=2, label='history')
+                ax.plot(xs, p(xs), 'r-', lw=2, label='history')
+
+            ext_tr = np.array(ext_tr).astype(np.float64)
+            ext_pts = np.concatenate( ( np.array(xs).reshape((len(xs),1)), p(xs).reshape((len(xs),1)) ) , axis=1)
+            
+        else:
+            ext_tr = np.array([mean,mean,mean])
+            ext_pts = ext_tr.copy()
 
         trs = []
-        ptss = []
-        probs = []
-        end_points = []
-        for i in range(self._num_samples):
-            pts, tr = self.sample_cubic_bspline( (x_hist, y_hist), ext_tr, dt )
-            probs.append( self.traj_distance(pts, ext_pts) )
-            ptss.append(pts)
-            trs.append(tr)
-            end_points.append(pts[-1,:])
+        ptss = [np.array(ext_pts)]
+        probs = [1]
+        end_points = [ptss[0][-1]]
 
-        probs = probs / np.sum(probs)
+        # trs = []
+        # ptss = []
+        # probs = []
+        # end_points = []
+        # for i in range(self._num_samples):
+        #     pts, tr = self.sample_cubic_bspline( (x_hist, y_hist), ext_tr, dt )
+        #     probs.append( self.traj_distance(pts, ext_pts) )
+        #     ptss.append(pts)
+        #     trs.append(tr)
+        #     end_points.append(pts[-1,:])
+
+        # probs = probs / np.sum(probs)
 
         if vis:
             for i in range(pts.shape[0]):
@@ -89,7 +115,7 @@ class TrajectorySampler:
                 ax.plot(ptss[i][:,0], ptss[i][:,1], color=(redness,0,(1-redness)), lw=2)
             ax.grid(True)
 
-        return end_points, probs, ptss
+        return end_points, probs, ptss, aug_poses
 
     def sample_cubic_bspline(self, hist, tr_last, dt):
         x_hist = hist[0]
