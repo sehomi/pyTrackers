@@ -3,6 +3,7 @@ import torch
 import torch.nn.functional as F
 import math
 import time
+import nms
 from pytracking import dcf, TensorList
 from pytracking.features.preprocessing import numpy_to_torch
 from pytracking.utils.plotting import show_tensor, plot_graph
@@ -106,7 +107,8 @@ class DiMP(BaseTracker):
         backbone_feat, sample_coords, im_patches = self.extract_backbone_features_multiloc(im, self.get_centered_sample_pos(FI=FI),
                                                                                            self.target_scale * self.params.scale_factors,
                                                                                            self.img_sample_sz)
-
+        # rects = [[r[1], r[0], r[3]-r[1], r[2]-r[0]] for r in sample_coords]
+        # nms.fast.nms(rects, scores, **kwargs)
         self._sample_coords = sample_coords.cpu().detach().numpy()
 
         # Extract classification features
@@ -211,9 +213,10 @@ class DiMP(BaseTracker):
             pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
                          self.img_support_sz / (2*self.feature_sz)
                          
-            pos.append( torch.Tensor([ FI[0][1]+FI[0][3]/2, FI[0][0]+FI[0][2]/2]) )
-            pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
-                         self.img_support_sz / (2*self.feature_sz)
+            for i in range(len(FI)):
+                pos.append( torch.Tensor([ FI[i][1]+FI[i][3]/2, FI[i][0]+FI[i][2]/2]) )
+                pos[-1] += ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
+                            self.img_support_sz / (2*self.feature_sz)
 
         return pos
 

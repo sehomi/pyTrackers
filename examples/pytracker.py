@@ -377,7 +377,7 @@ class PyTracker:
                     score = score[top:down, left:right]
                     crop_img = current_frame[ymin:ymax, xmin:xmax]
                     score_map = cv2.addWeighted(crop_img, 0.6, score, 0.4, 0)
-                    current_frame[ymin:ymax, xmin:xmax] = score_map
+                    # current_frame[ymin:ymax, xmin:xmax] = score_map
                     show_frame=cv2.rectangle(current_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (255, 0, 0),2)
 
                     if self.tracker_type=='DIMP50' or self.tracker_type=='KYS' or self.tracker_type=='TOMP' or self.tracker_type=='PRDIMP50':

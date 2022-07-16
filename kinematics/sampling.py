@@ -90,23 +90,23 @@ class TrajectorySampler:
             ext_tr = np.array([mean,mean,mean])
             ext_pts = ext_tr.copy()
 
-        trs = []
-        ptss = [np.array(ext_pts)]
-        probs = [1]
-        end_points = [ptss[0][-1]]
-
         # trs = []
-        # ptss = []
-        # probs = []
-        # end_points = []
-        # for i in range(self._num_samples):
-        #     pts, tr = self.sample_cubic_bspline( (x_hist, y_hist), ext_tr, dt )
-        #     probs.append( self.traj_distance(pts, ext_pts) )
-        #     ptss.append(pts)
-        #     trs.append(tr)
-        #     end_points.append(pts[-1,:])
+        # ptss = [np.array(ext_pts)]
+        # probs = [1]
+        # end_points = [ptss[0][-1]]
 
-        # probs = probs / np.sum(probs)
+        trs = []
+        ptss = []
+        probs = []
+        end_points = []
+        for i in range(self._num_samples):
+            pts, tr = self.sample_cubic_bspline( (x_hist, y_hist), ext_tr, dt )
+            probs.append( self.traj_distance(pts, ext_pts) )
+            ptss.append(pts)
+            trs.append(tr)
+            end_points.append(pts[-1,:])
+
+        probs = probs / np.sum(probs)
 
         if vis:
             for i in range(pts.shape[0]):
