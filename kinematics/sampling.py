@@ -10,9 +10,10 @@ class TrajectorySampler:
         self._curve = BSpline.Curve()
         self._step_size = 0.1
         self._num_samples = 10
-        self._vars = [0.5, 2, 5]
+        self._vars = [0.5, 1.5, 3]
         self._aug_vars = 0.8
         self._std_thresh = 0.5
+        self._poly_degree = 1
 
         self._curve.degree = 4
         self._curve.delta = self._step_size
@@ -48,7 +49,7 @@ class TrajectorySampler:
             aug_poses = self.create_augmented_poses(poses)
             x_hist_aug = np.concatenate( (x_hist, aug_poses[:,0] ), axis=0 )
             y_hist_aug = np.concatenate( (y_hist, aug_poses[:,1] ), axis=0 )
-            f = np.polyfit(x_hist_aug, y_hist_aug, 2)
+            f = np.polyfit(x_hist_aug, y_hist_aug, self._poly_degree)
             p = np.poly1d(f)
             p_prime = p.deriv()
             
@@ -66,17 +67,17 @@ class TrajectorySampler:
             x = x_hist[-1]
             xs = [x_hist[-1]]
             ext_tr = []
-            while ds < 3:
+            while ds < self._vars[2]*dt:
                 dx = sgn * np.cos( np.arctan( p_prime(x) ) )*self._step_size
                 ds += self._step_size
                 x += dx
                 xs.append(x)
 
-                if ds >= 1 and len(ext_tr) == 0:
+                if ds >= self._vars[0]*dt and len(ext_tr) == 0:
                     ext_tr.append([x, p(x)])
-                elif ds >= 2 and len(ext_tr) == 1:
+                elif ds >= self._vars[1]*dt and len(ext_tr) == 1:
                     ext_tr.append([x, p(x)])
-                elif ds >= 3 and len(ext_tr) == 2:
+                elif ds >= self._vars[2]*dt and len(ext_tr) == 2:
                     ext_tr.append([x, p(x)])
                 
             if vis:
@@ -126,7 +127,8 @@ class TrajectorySampler:
         tr_new[1,:] += np.random.normal(0.0, self._vars[1]*dt, 2)
         tr_new[2,:] += np.random.normal(0.0, self._vars[2]*dt, 2)
 
-        idx = int( len(x_hist)/2 )
+        # idx = int( len(x_hist)/2 )
+        idx = np.min((3, len(x_hist)))
         self._curve.ctrlpts = [[x_hist[-idx], y_hist[-idx], 0], [x_hist[-1], y_hist[-1], 0], 
                                [tr_new[0,0], tr_new[0,1], 0], [tr_new[1,0], tr_new[1,1], 0], 
                                [tr_new[2,0], tr_new[2,1], 0]]
