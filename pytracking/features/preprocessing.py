@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
+import cv2 as cv
 
 
 def numpy_to_torch(a: np.ndarray):
@@ -79,7 +80,12 @@ def sample_patch_multiloc(im, poses, scales, image_sz, mode: str='replicate', ma
             im_patches = torch.cat((im_patches, torch.cat(list(patch_iter)) ), 0)
             patch_coords = torch.cat((patch_coords, torch.cat(list(coord_iter)) ), 0)
 
-    return  im_patches, patch_coords
+    patch_coords_np = patch_coords.cpu().detach().numpy().astype(np.int32)
+    rects = [[int(r[1]), int(r[0]), int(r[3]-r[1]), int(r[2]-r[0])] for r in patch_coords_np]
+    scores = [float(0.9) for r in patch_coords]
+    idxs = cv.dnn.NMSBoxes(rects, scores, 0.3, 0.4)
+    idxs = idxs.ravel()
+    return  im_patches[idxs,:,:,:], patch_coords[idxs,:]
 
 
 def sample_patch(im: torch.Tensor, pos: torch.Tensor, sample_sz: torch.Tensor, output_sz: torch.Tensor = None,

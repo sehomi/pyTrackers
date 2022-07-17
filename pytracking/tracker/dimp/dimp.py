@@ -3,7 +3,6 @@ import torch
 import torch.nn.functional as F
 import math
 import time
-import nms
 from pytracking import dcf, TensorList
 from pytracking.features.preprocessing import numpy_to_torch
 from pytracking.utils.plotting import show_tensor, plot_graph
@@ -107,8 +106,6 @@ class DiMP(BaseTracker):
         backbone_feat, sample_coords, im_patches = self.extract_backbone_features_multiloc(im, self.get_centered_sample_pos(FI=FI),
                                                                                            self.target_scale * self.params.scale_factors,
                                                                                            self.img_sample_sz)
-        # rects = [[r[1], r[0], r[3]-r[1], r[2]-r[0]] for r in sample_coords]
-        # nms.fast.nms(rects, scores, **kwargs)
         self._sample_coords = sample_coords.cpu().detach().numpy()
 
         # Extract classification features
