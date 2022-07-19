@@ -259,6 +259,7 @@ class CameraKinematics:
             p2 = (int(center_est[0]+1), int(center_est[1]+1))
             image = cv.rectangle(image, p1, p2, (0, 255, 255),2)
 
+        probs = []
         if not gaussian_sampler:
             vs = []
             for i in range(1, len(self._pos_buff)):
@@ -284,7 +285,7 @@ class CameraKinematics:
                     self._pos_est[0] = self._pos_buff[-1][1:4] + self._interp_factor*v*dt 
 
             if len(self._pos_est) == 0:
-                return [tuple(self._last_rect)]
+                return [tuple(self._last_rect)], [1]
         
         else:
             time_from_last_pose = states[0] - self._pos_buff[-1][0]
@@ -319,8 +320,8 @@ class CameraKinematics:
 
             # print(self._pos_est, probs, ptss)
             if len(probs)>=2:
-                probs = np.array(probs) - np.min(probs)
-                probs = probs / np.max(probs)
+                redness = np.array(probs) - np.min(probs)
+                redness = redness / np.max(redness)
             for i, pts in enumerate(ptss):
                 for j in range(1,len(pts)):
                     
@@ -351,7 +352,7 @@ class CameraKinematics:
 
                     p1 = (int(center_est_old[0]), int(center_est_old[1]))
                     p2 = (int(center_est[0]), int(center_est[1]))
-                    image = cv.line(image, p1, p2, (255 - int(probs[i]*255), 0, int(probs[i]*255)), 2)
+                    image = cv.line(image, p1, p2, (255 - int(redness[i]*255), 0, int(redness[i]*255)), 2)
 
         rect_ests = []
         for pos_est in self._pos_est:
@@ -375,7 +376,7 @@ class CameraKinematics:
             rect_ests.append( (int(center_est[0]-self._last_rect[2]/2), \
                                int(center_est[1]-self._last_rect[3]/2),
                                self._last_rect[2], self._last_rect[3]) )
-        return rect_ests
+        return rect_ests, probs
 
 
     def get_camera_frame_vecs(self, eul, w, h):

@@ -108,7 +108,7 @@ class TrajectorySampler:
             end_points.append(pts[-1,:])
 
         probs = probs / np.sum(probs)
-
+        
         if vis:
             for i in range(pts.shape[0]):
                 min_prob = np.min(probs)
@@ -116,7 +116,7 @@ class TrajectorySampler:
                 ax.plot(ptss[i][:,0], ptss[i][:,1], color=(redness,0,(1-redness)), lw=2)
             ax.grid(True)
 
-        return end_points, probs, ptss, []
+        return end_points, probs.tolist(), ptss, []
 
     def sample_cubic_bspline(self, hist, tr_last, dt):
         x_hist = hist[0]

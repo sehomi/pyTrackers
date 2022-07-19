@@ -48,58 +48,13 @@ class VIOTDatasetConfig:
     }
 
     params={
-        "KCF_HOG":{"cup_0.5HZ":[0.1, 0], "cup_0.9HZ":[0.1, 0], "cup_1.1HZ":[0.1, 0], \
-                   "cup_1.5HZ":[0.1, 0], "cup_1.8HZ":[0.1, 0], "cup_2.1HZ":[0.1, 0], \
-                   "cup_3.2HZ":[0.1, 0], "park_mavic_1":[0.1, 1], "park_mavic_2":[0.1, 1], \
-                   "park_mavic_3":[0.1, 1], "park_mavic_4":[0.1, 1], "park_mavic_5":[0.1, 1], \
-                   "park_mavic_6":[0.1, 1], "park_mavic_7":[0.1, 1], "soccerfield_mavic_3":[0.1, 1], \
-                   "soccerfield_mavic_4":[0.1, 1]},
-        "ECO":{"cup_0.5HZ":[0.5, 0], "cup_0.9HZ":[0.5, 0], "cup_1.1HZ":[0.5, 0], \
-               "cup_1.5HZ":[0.5, 0], "cup_1.8HZ":[0.5, 0], "cup_2.1HZ":[0.5, 0], \
-               "cup_3.2HZ":[0.5, 0], "park_mavic_1":[0.5, 1], "park_mavic_2":[0.5, 1], \
-               "park_mavic_3":[0.5, 1], "park_mavic_4":[0.5, 1], "park_mavic_5":[0.5, 1], \
-               "park_mavic_6":[0.5, 1], "park_mavic_7":[0.5, 1], "soccerfield_mavic_3":[0.5, 1], \
-               "soccerfield_mavic_4":[0.5, 1]},
-        "DIMP50":{"cup_0.5HZ":[0.2, 1.1], "cup_0.9HZ":[0.2, 1.1], "cup_1.1HZ":[0.2, 1.1], \
-                  "cup_1.5HZ":[0.2, 1.1], "cup_1.8HZ":[0.2, 1.1], "cup_2.1HZ":[0.2, 1.1], \
-                  "cup_3.2HZ":[0.2, 1.1], "park_mavic_1":[0.3, 1.1], "park_mavic_2":[0.2, 1.1], \
-                  "park_mavic_3":[0.2, 1.1], "park_mavic_4":[0.2, 1.1], "park_mavic_5":[0.2, 1.1], \
-                  "park_mavic_6":[0.2, 1.1], "park_mavic_7":[0.2, 1.1], "soccerfield_mavic_3":[0.2, 1.1], \
-                  "soccerfield_mavic_4":[0.2, 1.1]},
-        "PRDIMP50":{"cup_0.5HZ":[0.3, 1], "cup_0.9HZ":[0.3, 1], "cup_1.1HZ":[0.3, 1], \
-                  "cup_1.5HZ":[0.3, 1], "cup_1.8HZ":[0.3, 1], "cup_2.1HZ":[0.3, 1], \
-                  "cup_3.2HZ":[0.3, 1], "park_mavic_1":[0.3, 1], "park_mavic_2":[0.3, 1], \
-                  "park_mavic_3":[0.3, 1], "park_mavic_4":[0.3, 1], "park_mavic_5":[0.3, 1], \
-                  "park_mavic_6":[0.3, 1], "park_mavic_7":[0.3, 1], "soccerfield_mavic_3":[0.3, 1], \
-                  "soccerfield_mavic_4":[0.3, 1]},
-        "KYS":{"cup_0.5HZ":[0.2, 1.1], "cup_0.9HZ":[0.2, 1.1], "cup_1.1HZ":[0.2, 1.1], \
-                  "cup_1.5HZ":[0.2, 1.1], "cup_1.8HZ":[0.2, 1.1], "cup_2.1HZ":[0.2, 1.1], \
-                  "cup_3.2HZ":[0.2, 1.1], "park_mavic_1":[0.2, 1.1], "park_mavic_2":[0.2, 1.1], \
-                  "park_mavic_3":[0.2, 1.1], "park_mavic_4":[0.2, 1.1], "park_mavic_5":[0.2, 1.1], \
-                  "park_mavic_6":[0.2, 1.1], "park_mavic_7":[0.2, 1.1], "soccerfield_mavic_3":[0.2, 1.1], \
-                  "soccerfield_mavic_4":[0.2, 1.1]},
-        "TOMP":{"cup_0.5HZ":[0.5, 1], "cup_0.9HZ":[0.5, 1], "cup_1.1HZ":[0.5, 1], \
-                  "cup_1.5HZ":[0.5, 1], "cup_1.8HZ":[0.5, 1], "cup_2.1HZ":[0.5, 1], \
-                  "cup_3.2HZ":[0.5, 1], "park_mavic_1":[0.5, 1], "park_mavic_2":[0.5, 1], \
-                  "park_mavic_3":[0.5, 1], "park_mavic_4":[0.5, 1], "park_mavic_5":[0.5, 1], \
-                  "park_mavic_6":[0.5, 1], "park_mavic_7":[0.5, 1], "soccerfield_mavic_3":[0.5, 1], \
-                  "soccerfield_mavic_4":[0.5, 1]},
-        "CSRDCF":{"cup_0.5HZ":[0.2, 0], "cup_0.9HZ":[0.2, 0], "cup_1.1HZ":[0.2, 0], \
-                  "cup_1.5HZ":[0.2, 0], "cup_1.8HZ":[0.2, 0], "cup_2.1HZ":[0.2, 0], \
-                  "cup_3.2HZ":[0.2, 0], "park_mavic_1":[0.2, 1], "park_mavic_2":[0.2, 1], \
-                  "park_mavic_3":[0.2, 1], "park_mavic_4":[0.2, 1], "park_mavic_5":[0.2, 1], \
-                  "park_mavic_6":[0.2, 1], "park_mavic_7":[0.2, 1], "soccerfield_mavic_3":[0.2, 1], \
-                  "soccerfield_mavic_4":[0.2, 1]},
-        "LDES":{"cup_0.5HZ":[0.3, 0], "cup_0.9HZ":[0.3, 0], "cup_1.1HZ":[0.3, 0], \
-                "cup_1.5HZ":[0.3, 0], "cup_1.8HZ":[0.3, 0], "cup_2.1HZ":[0.3, 0], \
-                "cup_3.2HZ":[0.3, 0], "park_mavic_1":[0.3, 1], "park_mavic_2":[0.3, 1], \
-                "park_mavic_3":[0.3, 1], "park_mavic_4":[0.3, 1], "park_mavic_5":[0.3, 1], \
-                "park_mavic_6":[0.3, 1], "park_mavic_7":[0.3, 1], "soccerfield_mavic_3":[0.3, 1], \
-                "soccerfield_mavic_4":[0.3, 1]},
-        "STRCF":{"cup_0.5HZ":[0.2, 0], "cup_0.9HZ":[0.2, 0], "cup_1.1HZ":[0.2, 0], \
-                 "cup_1.5HZ":[0.2, 0], "cup_1.8HZ":[0.2, 0], "cup_2.1HZ":[0.2, 0], \
-                 "cup_3.2HZ":[0.2, 0], "park_mavic_1":[0.2, 1], "park_mavic_2":[0.2, 1], \
-                 "park_mavic_3":[0.2, 1], "park_mavic_4":[0.2, 1], "park_mavic_5":[0.2, 1], \
-                 "park_mavic_6":[0.2, 1], "park_mavic_7":[0.2, 1], "soccerfield_mavic_3":[0.2, 1], \
-                 "soccerfield_mavic_4":[0.2, 1]},
+        "KCF_HOG":[0.1, 1],
+        "ECO":[0.5, 1],
+        "DIMP50":[0.3, 1],
+        "PRDIMP50":[0.3, 1],
+        "KYS":[0.2, 1],
+        "TOMP":[0.5, 1],
+        "CSRDCF":[0.2, 1],
+        "LDES":[0.3, 1],
+        "STRCF":[0.2, 1]
     }

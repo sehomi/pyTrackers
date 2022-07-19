@@ -20,7 +20,7 @@ from cftracker.mkcfup import MKCFup
 from cftracker.strcf import STRCF
 from cftracker.mccth_staple import MCCTHStaple
 from lib.eco.config import otb_deep_config,otb_hc_config
-from cftracker.config import staple_config,ldes_config,dsst_config,csrdcf_config,mkcf_up_config,mccth_staple_config
+from cftracker.config import ldes_config,csrdcf_config
 
 from kinematics.camera_kinematics import CameraKinematics
 
@@ -53,179 +53,108 @@ class PyTracker:
 
         else:
             self.init_gt=self.gts[0]
-        if self.tracker_type == 'MOSSE':
-            self.tracker=MOSSE()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='CSK':
-            self.tracker=CSK()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='CN':
-            self.tracker=CN()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='DSST':
-            self.tracker=DSST(dsst_config.DSSTConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='Staple':
-            self.tracker=Staple(config=staple_config.StapleConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='Staple-CA':
-            self.tracker=Staple(config=staple_config.StapleCAConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='KCF_CN':
-            self.tracker=KCF(features='cn',kernel='gaussian')
-            self.ratio_thresh=0.8
-        elif self.tracker_type=='KCF_GRAY':
-            self.tracker=KCF(features='gray',kernel='gaussian')
-            self.ratio_thresh=0.8
-        elif self.tracker_type=='KCF_HOG':
+
+        
+    
+        if self.tracker_type=='KCF_HOG':
             self.tracker=KCF(features='hog',kernel='gaussian')
             try:
-                self.ratio_thresh=dataset_config.params['KCF_HOG'][dataname][0]
+                self.ratio_thresh=dataset_config.params['KCF_HOG'][0]
             except:
                 self.ratio_thresh=0.1
 
             try:
-                self.interp_factor=dataset_config.params['KCF_HOG'][dataname][1]
+                self.interp_factor=dataset_config.params['KCF_HOG'][1]
             except:
-                self.interp_factor=0.3
+                self.interp_factor=1.0
 
-        elif self.tracker_type=='DCF_GRAY':
-            self.tracker=KCF(features='gray',kernel='linear')
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='DCF_HOG':
-            self.tracker=KCF(features='hog',kernel='linear')
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='DAT':
-            self.tracker=DAT()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='ECO-HC':
-            self.tracker=ECO(config=otb_hc_config.OTBHCConfig())
-            self.ratio_thresh=0.5
-        elif self.tracker_type=='ECO':
-            self.tracker=ECO(config=otb_deep_config.OTBDeepConfig())
-            try:
-                self.ratio_thresh=dataset_config.params['ECO'][dataname][0]
-            except:
-                self.ratio_thresh=0.5
-
-            try:
-                self.interp_factor=dataset_config.params['ECO'][dataname][1]
-            except:
-                self.interp_factor=0.3
-
-        elif self.tracker_type=='BACF':
-            self.tracker=BACF()
-            self.ratio_thresh=0.2
         elif self.tracker_type=='CSRDCF':
             self.tracker=CSRDCF(config=csrdcf_config.CSRDCFConfig())
             try:
-                self.ratio_thresh=dataset_config.params['CSRDCF'][dataname][0]
+                self.ratio_thresh=dataset_config.params['CSRDCF'][0]
+            except:
+                self.ratio_thresh=0.2
+
+            try:
+                self.interp_factor=dataset_config.params['CSRDCF'][1]
+            except:
+                self.interp_factor=1
+
+        elif self.tracker_type=='LDES':
+            self.tracker=LDES(ldes_config.LDESDemoLinearConfig())
+            try:
+                self.ratio_thresh=dataset_config.params['LDES'][0]
             except:
                 self.ratio_thresh=0.3
 
             try:
-                self.interp_factor=dataset_config.params['CSRDCF'][dataname][1]
+                self.interp_factor=dataset_config.params['LDES'][1]
             except:
-                self.interp_factor=0.3
+                self.interp_factor=1
 
-        elif self.tracker_type=='CSRDCF-LP':
-            self.tracker=CSRDCF(config=csrdcf_config.CSRDCFLPConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='SAMF':
-            self.tracker=SAMF()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='LDES':
-            self.tracker=LDES(ldes_config.LDESDemoLinearConfig())
-            try:
-                self.ratio_thresh=dataset_config.params['LDES'][dataname][0]
-            except:
-                self.ratio_thresh=0.1
-
-            try:
-                self.interp_factor=dataset_config.params['LDES'][dataname][1]
-            except:
-                self.interp_factor=0.3
-
-        elif self.tracker_type=='DSST-LP':
-            self.tracker=DSST(dsst_config.DSSTLPConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='MKCFup':
-            self.tracker=MKCFup(config=mkcf_up_config.MKCFupConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='MKCFup-LP':
-            self.tracker=MKCFup(config=mkcf_up_config.MKCFupLPConfig())
-            self.ratio_thresh=0.1
         elif self.tracker_type=='STRCF':
             self.tracker=STRCF()
             try:
-                self.ratio_thresh=dataset_config.params['STRCF'][dataname][0]
+                self.ratio_thresh=dataset_config.params['STRCF'][0]
             except:
-                self.ratio_thresh=0.25
+                self.ratio_thresh=0.2
 
             try:
-                self.interp_factor=dataset_config.params['STRCF'][dataname][1]
+                self.interp_factor=dataset_config.params['STRCF'][1]
             except:
-                self.interp_factor=0.3
-
-        elif self.tracker_type=='MCCTH-Staple':
-            self.tracker=MCCTHStaple(config=mccth_staple_config.MCCTHOTBConfig())
-            self.ratio_thresh=0.1
-
-        elif self.tracker_type=='MCCTH':
-            self.tracker=MCCTH(config=mccth_config.MCCTHConfig())
-            self.ratio_thresh=0.1
+                self.interp_factor=1
 
         elif self.tracker_type=='DIMP50':
             self.tracker=self.getETHTracker('dimp','dimp50')
             self.ethTracker=True
             try:
-                self.ratio_thresh=dataset_config.params['DIMP50'][dataname][0]
+                self.ratio_thresh=dataset_config.params['DIMP50'][0]
             except:
-                self.ratio_thresh=0.5
+                self.ratio_thresh=0.3
 
             try:
-                self.interp_factor=dataset_config.params['DIMP50'][dataname][1]
+                self.interp_factor=dataset_config.params['DIMP50'][1]
             except:
-                self.interp_factor=0.3
+                self.interp_factor=1
 
         elif self.tracker_type=='PRDIMP50':
             self.tracker=self.getETHTracker('dimp','prdimp50')
             self.ethTracker=True
             try:
-                self.ratio_thresh=dataset_config.params['PRDIMP50'][dataname][0]
+                self.ratio_thresh=dataset_config.params['PRDIMP50'][0]
             except:
-                self.ratio_thresh=0.5
+                self.ratio_thresh=0.3
 
             try:
-                self.interp_factor=dataset_config.params['PRDIMP50'][dataname][1]
+                self.interp_factor=dataset_config.params['PRDIMP50'][1]
             except:
-                self.interp_factor=0.3
+                self.interp_factor=1
 
         elif self.tracker_type=='KYS':
             self.tracker=self.getETHTracker('kys','default')
             self.ethTracker=True
             try:
-                self.ratio_thresh=dataset_config.params['KYS'][dataname][0]
+                self.ratio_thresh=dataset_config.params['KYS'][0]
             except:
-                self.ratio_thresh=0.5
+                self.ratio_thresh=0.2
 
             try:
-                self.interp_factor=dataset_config.params['KYS'][dataname][1]
+                self.interp_factor=dataset_config.params['KYS'][1]
             except:
-                self.interp_factor=0.3
+                self.interp_factor=1
 
         elif self.tracker_type=='TOMP':
             self.tracker=self.getETHTracker('tomp','tomp101')
             self.ethTracker=True
             try:
-                self.ratio_thresh=dataset_config.params['TOMP'][dataname][0]
+                self.ratio_thresh=dataset_config.params['TOMP'][0]
             except:
                 self.ratio_thresh=0.5
 
             try:
-                self.interp_factor=dataset_config.params['TOMP'][dataname][1]
+                self.interp_factor=dataset_config.params['TOMP'][1]
             except:
-                self.interp_factor=0.3
+                self.interp_factor=1
 
         else:
             raise NotImplementedError
@@ -259,10 +188,10 @@ class PyTracker:
                     'sequence_object_ids': [1, ]}
         self.tracker.initialize(frame, box)
 
-    def doTrack(self, current_frame, verbose, est_loc, do_learning, viot=False):
+    def doTrack(self, current_frame, verbose, est_loc, probs, do_learning, viot=False):
     	if self.ethTracker:
             if viot:
-                out = self.tracker.track(current_frame, est_loc, do_learning=do_learning)
+                out = self.tracker.track(current_frame, est_loc, probs, do_learning=do_learning)
             else:
         	    out = self.tracker.track(current_frame)
 
@@ -304,6 +233,7 @@ class PyTracker:
         psr0=-1
         psr=-1
         est_loc=[init_gt]
+        probs = [1]
         stop=False
         last_bbox=None
 
@@ -315,7 +245,7 @@ class PyTracker:
                 if stop:
                     bbox=last_bbox
                 else:
-                    bbox=self.doTrack(current_frame, verbose, est_loc, psr/psr0>self.ratio_thresh and not stop, viot=self.viot)
+                    bbox=self.doTrack(current_frame, verbose, est_loc, probs, psr/psr0>self.ratio_thresh and not stop, viot=self.viot)
                     last_bbox=bbox
 
                 stop=bbox[2] > width or bbox[3] > height
@@ -334,9 +264,9 @@ class PyTracker:
 
                 ## estimating target location using kinematc model
                 if psr/psr0 > self.ratio_thresh:
-                    est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, bbox, gaussian_sampler=True)
+                    est_loc, probs = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, bbox, gaussian_sampler=True)
                 else:
-                    est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, None, gaussian_sampler=True)
+                    est_loc, probs = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, None, gaussian_sampler=True)
 
                 # print("psr ratio: ",psr/psr0, " learning: ", psr/psr0 > self.ratio_thresh, " est: ", est_loc)
 
@@ -378,16 +308,21 @@ class PyTracker:
                     crop_img = current_frame[ymin:ymax, xmin:xmax]
                     score_map = cv2.addWeighted(crop_img, 0.6, score, 0.4, 0)
                     # current_frame[ymin:ymax, xmin:xmax] = score_map
-                    show_frame=cv2.rectangle(current_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (255, 0, 0),2)
+                    show_frame=cv2.rectangle(current_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 255, 0),2)
 
                     if self.tracker_type=='DIMP50' or self.tracker_type=='KYS' or self.tracker_type=='TOMP' or self.tracker_type=='PRDIMP50':
-                        for zone in self.tracker._sample_coords:
+                        for k, zone in enumerate(self.tracker._sample_coords):
                             show_frame=cv2.rectangle(show_frame, (int(zone[1]), int(zone[0])), 
                                                      (int(zone[3]), int(zone[2])), (0, 255, 255),1)
+                            text_x = np.max( [int(zone[1]), 0 ] ) + 10
+                            text_y = np.max( [int(zone[0]), 0 ] ) + 10
+                            text_loc = ( text_x , text_y )
+                            cv2.putText(show_frame, "{:.1f} %".format(self.tracker._probs[k]*100), text_loc, 
+                                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 255), 1)
 
-                    if not psr/psr0>self.ratio_thresh:
-                        show_frame = cv2.line(show_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 0, 255), 2)
-                        show_frame = cv2.line(show_frame, (int(x1+w), int(y1)), (int(x1), int(y1 + h)), (0, 0, 255), 2)
+                    # if not psr/psr0>self.ratio_thresh:
+                    #     show_frame = cv2.line(show_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 0, 255), 2)
+                    #     show_frame = cv2.line(show_frame, (int(x1+w), int(y1)), (int(x1), int(y1 + h)), (0, 0, 255), 2)
 
                     # if self.viot:
                     #     p1 = (int(est_loc[0]+est_loc[2]/2-1), int(est_loc[1]+est_loc[3]/2-1))

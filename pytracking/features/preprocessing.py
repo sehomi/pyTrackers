@@ -52,7 +52,7 @@ def sample_patch_multiscale(im, pos, scales, image_sz, mode: str='replicate', ma
 
     return  im_patches, patch_coords
 
-def sample_patch_multiloc(im, poses, scales, image_sz, mode: str='replicate', max_scale_change=None):
+def sample_patch_multiloc(im, poses, p, scales, image_sz, mode: str='replicate', max_scale_change=None):
     """Extract image patches at multiple scales.
     args:
         im: Image.
@@ -82,10 +82,12 @@ def sample_patch_multiloc(im, poses, scales, image_sz, mode: str='replicate', ma
 
     patch_coords_np = patch_coords.cpu().detach().numpy().astype(np.int32)
     rects = [[int(r[1]), int(r[0]), int(r[3]-r[1]), int(r[2]-r[0])] for r in patch_coords_np]
-    scores = [float(0.9) for r in patch_coords]
+    p.insert(0, 1)
+    sm = np.sum(p)
+    scores = [float(r/sm) for r in p]
     idxs = cv.dnn.NMSBoxes(rects, scores, 0.3, 0.4)
     idxs = idxs.ravel()
-    return  im_patches[idxs,:,:,:], patch_coords[idxs,:]
+    return  im_patches[idxs,:,:,:], patch_coords[idxs,:], [scores[i] for i in idxs]
 
 
 def sample_patch(im: torch.Tensor, pos: torch.Tensor, sample_sz: torch.Tensor, output_sz: torch.Tensor = None,

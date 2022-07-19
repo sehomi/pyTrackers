@@ -91,7 +91,7 @@ class DiMP(BaseTracker):
         return out
 
 
-    def track(self, image, FI: list = None, do_learning=True, info: dict = None) -> dict:
+    def track(self, image, FI: list = None, p=None, do_learning=True, info: dict = None) -> dict:
         self.debug_info = {}
 
         self.frame_num += 1
@@ -103,10 +103,11 @@ class DiMP(BaseTracker):
         # ------- LOCALIZATION ------- #
 
         # Extract backbone features
-        backbone_feat, sample_coords, im_patches = self.extract_backbone_features_multiloc(im, self.get_centered_sample_pos(FI=FI),
+        backbone_feat, sample_coords, im_patches, probs = self.extract_backbone_features_multiloc(im, self.get_centered_sample_pos(FI=FI), p, \
                                                                                            self.target_scale * self.params.scale_factors,
                                                                                            self.img_sample_sz)
         self._sample_coords = sample_coords.cpu().detach().numpy()
+        self._probs = probs
 
         # Extract classification features
         test_x = self.get_classification_features(backbone_feat)
@@ -340,13 +341,13 @@ class DiMP(BaseTracker):
             backbone_feat = self.net.extract_backbone(im_patches)
         return backbone_feat, patch_coords, im_patches
 
-    def extract_backbone_features_multiloc(self, im: torch.Tensor, poses, scales, sz: torch.Tensor):
-        im_patches, patch_coords = sample_patch_multiloc(im, poses, scales, sz,
+    def extract_backbone_features_multiloc(self, im: torch.Tensor, poses, p, scales, sz: torch.Tensor):
+        im_patches, patch_coords, probs = sample_patch_multiloc(im, poses, p, scales, sz,
                                                            mode=self.params.get('border_mode', 'replicate'),
                                                            max_scale_change=self.params.get('patch_max_scale_change', None))
         with torch.no_grad():
             backbone_feat = self.net.extract_backbone(im_patches)
-        return backbone_feat, patch_coords, im_patches
+        return backbone_feat, patch_coords, im_patches, probs
 
     def get_classification_features(self, backbone_feat):
         with torch.no_grad():
