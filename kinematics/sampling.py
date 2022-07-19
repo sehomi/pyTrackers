@@ -5,17 +5,17 @@ from geomdl import BSpline
 
 class TrajectorySampler:
 
-    def __init__(self):
+    def __init__(self, configs):
 
         self._curve = BSpline.Curve()
-        self._step_size = 0.1
-        self._num_samples = 10
-        self._vars = [0.5, 1.5, 3]
-        self._aug_vars = 0.8
-        self._std_thresh = 0.5
-        self._poly_degree = 1
+        self._step_size = configs['step_size']
+        self._num_samples = configs['num_samples']
+        self._vars = configs['vars']
+        self._aug_vars = configs['aug_vars']
+        self._std_thresh = configs['std_thresh']
+        self._poly_degree = configs['poly_degree']
 
-        self._curve.degree = 4
+        self._curve.degree = configs['bspline_degree']
         self._curve.delta = self._step_size
 
     def traj_distance(self, trj1, trj2):

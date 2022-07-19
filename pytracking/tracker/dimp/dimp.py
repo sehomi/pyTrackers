@@ -120,7 +120,7 @@ class DiMP(BaseTracker):
         # print("*** ", scores_raw.cpu().detach().numpy().shape, sample_coords.cpu().detach().numpy().shape, im_patches.cpu().detach().numpy().shape, " ***")
 
         # Localize the target
-        translation_vec, scale_ind, s, flag = self.localize_target(scores_raw, sample_pos, sample_scales)
+        translation_vec, scale_ind, s, flag = self.localize_target(scores_raw, sample_pos, sample_scales, probs=None)
         new_pos = sample_pos[scale_ind,:] + translation_vec
 
         # Update position and scale
@@ -224,7 +224,7 @@ class DiMP(BaseTracker):
             scores = self.net.classifier.classify(self.target_filter, sample_x)
         return scores
 
-    def localize_target(self, scores, sample_pos, sample_scales):
+    def localize_target(self, scores, sample_pos, sample_scales, probs=None):
         """Run the target localization."""
 
         scores = scores.squeeze(1)
@@ -247,6 +247,10 @@ class DiMP(BaseTracker):
             assert score_filter_ksz % 2 == 1
             kernel = scores.new_ones(1,1,score_filter_ksz,score_filter_ksz)
             scores = F.conv2d(scores.view(-1,1,*scores.shape[-2:]), kernel, padding=score_filter_ksz//2).view(scores.shape)
+
+        if not probs is None:
+          for i in range(len(probs)):
+            scores[i,:,:] *= probs[i]
 
         if self.params.get('advanced_localization', False):
             return self.localize_advanced(scores, sample_pos, sample_scales)

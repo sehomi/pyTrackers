@@ -23,6 +23,7 @@ from lib.eco.config import otb_deep_config,otb_hc_config
 from cftracker.config import ldes_config,csrdcf_config
 
 from kinematics.camera_kinematics import CameraKinematics
+from kinematics.configs import KinematicsConfig
 
 try:
   import google.colab
@@ -159,8 +160,9 @@ class PyTracker:
         else:
             raise NotImplementedError
 
-        self.viot = True
-        # self.viot = False
+        self._kin_configs = KinematicsConfig()
+        self.viot = self._kin_configs.configs['method'] == 'prob' or \
+                    self._kin_configs.configs['method'] == 'viot'
 
 
     def getETHTracker(self, name, params):
@@ -188,23 +190,34 @@ class PyTracker:
                     'sequence_object_ids': [1, ]}
         self.tracker.initialize(frame, box)
 
-    def doTrack(self, current_frame, verbose, est_loc, probs, do_learning, viot=False):
-    	if self.ethTracker:
-            if viot:
-                out = self.tracker.track(current_frame, est_loc, probs, do_learning=do_learning)
-            else:
-        	    out = self.tracker.track(current_frame)
+    def doTrack(self, current_frame, verbose, est_loc, probs, do_learning):
+        if self.ethTracker:
+          if self._kin_configs.configs['method'] == 'prob':
+            out = self.tracker.track(current_frame, FI=est_loc, p=probs, do_learning=do_learning)
 
-            bbox = [int(s) for s in out['target_bbox']]
-    	else:
-    	    if viot:
-    	        bbox=self.tracker.update(current_frame,vis=verbose,FI=est_loc, \
-    	                                 do_learning=do_learning) ## VIOT
-    	    else:
-    	    	bbox=self.tracker.update(current_frame,vis=verbose)
-    	    	# bbox=self.tracker.update(current_frame,vis=verbose,FI=est_loc)
+          elif self._kin_configs.configs['method'] == 'viot':
+            out = self.tracker.track(current_frame, FI=est_loc, do_learning=do_learning)
 
-    	return bbox
+          elif self._kin_configs.configs['method'] == 'normal':
+            out = self.tracker.track(current_frame)
+
+          else:
+            raise ValueError('kinematics method is undefined.')
+
+          bbox = [int(s) for s in out['target_bbox']]
+          
+        else:
+          if self._kin_configs.configs['method'] == 'viot':
+            bbox=self.tracker.update(current_frame,vis=verbose,FI=est_loc, \
+                                        do_learning=do_learning) ## VIOT
+
+          elif self._kin_configs.configs['method'] == 'normal':
+            bbox=self.tracker.update(current_frame,vis=verbose)
+              
+          else:
+            raise ValueError('kinematics method is undefined.')
+            
+        return bbox
 
 
     def tracking(self,verbose=True,video_path=None):
@@ -226,9 +239,8 @@ class PyTracker:
 
         ## kinematic model for MAVIC Mini with horizontal field of view (hfov)
         ## equal to 66 deg.
-        kin = CameraKinematics(self.interp_factor, init_frame.shape[1]/2, init_frame.shape[0]/2,\
-                                w=init_frame.shape[1], h=init_frame.shape[0],\
-                                hfov=self.fov, vis=False)
+        kin = CameraKinematics(self._kin_configs.configs, self.interp_factor, init_frame.shape[1]/2, init_frame.shape[0]/2,\
+                                w=init_frame.shape[1], h=init_frame.shape[0], hfov=self.fov, vis=False)
 
         psr0=-1
         psr=-1
@@ -245,7 +257,7 @@ class PyTracker:
                 if stop:
                     bbox=last_bbox
                 else:
-                    bbox=self.doTrack(current_frame, verbose, est_loc, probs, psr/psr0>self.ratio_thresh and not stop, viot=self.viot)
+                    bbox=self.doTrack(current_frame, verbose, est_loc, probs, psr/psr0>self.ratio_thresh and not stop)
                     last_bbox=bbox
 
                 stop=bbox[2] > width or bbox[3] > height
@@ -264,9 +276,9 @@ class PyTracker:
 
                 ## estimating target location using kinematc model
                 if psr/psr0 > self.ratio_thresh:
-                    est_loc, probs = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, bbox, gaussian_sampler=True)
+                    est_loc, probs = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, bbox)
                 else:
-                    est_loc, probs = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, None, gaussian_sampler=True)
+                    est_loc, probs = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, None)
 
                 # print("psr ratio: ",psr/psr0, " learning: ", psr/psr0 > self.ratio_thresh, " est: ", est_loc)
 
@@ -314,11 +326,13 @@ class PyTracker:
                         for k, zone in enumerate(self.tracker._sample_coords):
                             show_frame=cv2.rectangle(show_frame, (int(zone[1]), int(zone[0])), 
                                                      (int(zone[3]), int(zone[2])), (0, 255, 255),1)
-                            text_x = np.max( [int(zone[1]), 0 ] ) + 10
-                            text_y = np.max( [int(zone[0]), 0 ] ) + 10
-                            text_loc = ( text_x , text_y )
-                            cv2.putText(show_frame, "{:.1f} %".format(self.tracker._probs[k]*100), text_loc, 
-                                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 255), 1)
+
+                            if self._kin_configs.configs['method'] == 'prob':
+                              text_x = np.max( [int(zone[1]), 0 ] ) + 10
+                              text_y = np.max( [int(zone[0]), 0 ] ) + 10
+                              text_loc = ( text_x , text_y )
+                              cv2.putText(show_frame, "{:.1f} %".format(self.tracker._probs[k]*100), text_loc, 
+                                          cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 255), 2)
 
                     # if not psr/psr0>self.ratio_thresh:
                     #     show_frame = cv2.line(show_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 0, 255), 2)

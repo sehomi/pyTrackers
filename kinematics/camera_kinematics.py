@@ -11,7 +11,9 @@ from kinematics.sampling import TrajectorySampler
 
 class CameraKinematics:
 
-    def __init__(self, factor, cx, cy, f=None, w=None, h=None, hfov=None, vis=True):
+    def __init__(self, configs, factor, cx, cy, f=None, w=None, h=None, hfov=None, vis=True):
+
+        self._configs = configs
 
         self._cx = cx
         self._cy = cy
@@ -37,10 +39,10 @@ class CameraKinematics:
         self._diff_buff = []
         self._pos_buff = []
         self._pos_est = []
-        self._pos_buff_size = 40
+        self._pos_buff_size = configs['pos_buff_size']
         self._last_target_states = [False]
 
-        self._ts = TrajectorySampler()
+        self._ts = TrajectorySampler(configs)
 
         self._vis=vis
         if vis:
@@ -176,7 +178,9 @@ class CameraKinematics:
             return vector
         
 
-    def updateRect3D(self, states, ref, image, rect=None, gaussian_sampler=False):
+    def updateRect3D(self, states, ref, image, rect=None):
+
+        gaussian_sampler = self._configs['method'] == 'prob'
 
         if rect is not None:
             self._last_rect = rect

@@ -80,14 +80,20 @@ def sample_patch_multiloc(im, poses, p, scales, image_sz, mode: str='replicate',
             im_patches = torch.cat((im_patches, torch.cat(list(patch_iter)) ), 0)
             patch_coords = torch.cat((patch_coords, torch.cat(list(coord_iter)) ), 0)
 
-    patch_coords_np = patch_coords.cpu().detach().numpy().astype(np.int32)
-    rects = [[int(r[1]), int(r[0]), int(r[3]-r[1]), int(r[2]-r[0])] for r in patch_coords_np]
-    p.insert(0, 1)
-    sm = np.sum(p)
-    scores = [float(r/sm) for r in p]
-    idxs = cv.dnn.NMSBoxes(rects, scores, 0.3, 0.4)
-    idxs = idxs.ravel()
-    return  im_patches[idxs,:,:,:], patch_coords[idxs,:], [scores[i] for i in idxs]
+    if p is None:
+      return  im_patches, patch_coords, p
+
+    else:
+      patch_coords_np = patch_coords.cpu().detach().numpy().astype(np.int32)
+      rects = [[int(r[1]), int(r[0]), int(r[3]-r[1]), int(r[2]-r[0])] for r in patch_coords_np]
+      p.insert(0, 1)
+      sm = np.sum(p)
+      scores = [float(r/sm) for r in p]
+      idxs = cv.dnn.NMSBoxes(rects, scores, 0.01, 0.4)
+      idxs = idxs.ravel()
+      new_scores = [scores[i] for i in idxs]
+      new_scores = new_scores / np.sum(new_scores)
+      return  im_patches[idxs,:,:,:], patch_coords[idxs,:], new_scores.tolist()
 
 
 def sample_patch(im: torch.Tensor, pos: torch.Tensor, sample_sz: torch.Tensor, output_sz: torch.Tensor = None,
