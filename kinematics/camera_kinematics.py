@@ -201,13 +201,13 @@ class CameraKinematics:
             ## calculate target pos
             target_pos = self.scale_vector(inertia_dir, cam_pos[2]) + cam_pos
 
-            if not gaussian_sampler:
-                ## if target is just found, empty the observation buffer to prevent
-                ## oscilations around target
-                if len(self._last_target_states) >= 5:
-                    if np.sum( np.array(self._last_target_states[2:5]) ) >= 2  and \
-                    np.sum( np.array(self._last_target_states[0:3]) ) <= 1:
-                        self._pos_buff = []
+            # if not gaussian_sampler:
+            ## if target is just found, empty the observation buffer to prevent
+            ## oscilations around target
+            if len(self._last_target_states) >= 5:
+                if np.sum( np.array(self._last_target_states[2:5]) ) >= 2  and \
+                np.sum( np.array(self._last_target_states[0:3]) ) <= 1:
+                    self._pos_buff = []
 
             ## buffer target positions
             if len(self._pos_buff) > self._pos_buff_size:
@@ -292,6 +292,30 @@ class CameraKinematics:
                 time_from_last_pose = 0.1
             self._pos_est, probs, ptss, aug = self._ts.sample_gaussian_trajectories( np.array(self._pos_buff)[:,1:4], time_from_last_pose )
             self._pos_est = [np.array([p[0], p[1], 0.0]) for p in self._pos_est]
+
+            # image = cv.putText(image, "{}".format(mean_state), (50,50), cv.FONT_HERSHEY_SIMPLEX, 
+            #                    1, (255,0,0), 2, cv.LINE_AA)
+
+            for pos in aug:
+                 
+                inertia_dir = pos - cam_pos
+                if np.linalg.norm(inertia_dir) == 0:
+                    continue
+
+                inertia_dir = inertia_dir / np.linalg.norm(inertia_dir)
+
+                ## convert new estimate of target direction vector to body coordinates
+                body_dir_est = self.inertia_to_body( inertia_dir, imu_meas)
+
+                ## convert body to cam coordinates
+                cam_dir_est = self.body_to_cam(body_dir_est)
+
+                ## reproject to image plane
+                center_est = self.from_direction_vector(cam_dir_est, self._cx, self._cy, self._f)
+
+                p1 = (int(center_est[0]-1), int(center_est[1]-1))
+                p2 = (int(center_est[0]+1), int(center_est[1]+1))
+                image = cv.rectangle(image, p1, p2, (255, 255, 0),2)
 
             # print(self._pos_est, probs, ptss)
             if len(probs)>=2:

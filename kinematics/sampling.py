@@ -47,9 +47,9 @@ class TrajectorySampler:
         aug_poses = []
         if std > self._std_thresh:
             aug_poses = self.create_augmented_poses(poses)
-            x_hist_aug = np.concatenate( (x_hist, aug_poses[:,0] ), axis=0 )
-            y_hist_aug = np.concatenate( (y_hist, aug_poses[:,1] ), axis=0 )
-            f = np.polyfit(x_hist_aug, y_hist_aug, self._poly_degree)
+            # x_hist_aug = np.concatenate( (x_hist, aug_poses[:,0] ), axis=0 )
+            # y_hist_aug = np.concatenate( (y_hist, aug_poses[:,1] ), axis=0 )
+            f = np.polyfit(x_hist, y_hist, self._poly_degree)
             p = np.poly1d(f)
             p_prime = p.deriv()
             
@@ -64,7 +64,7 @@ class TrajectorySampler:
             if np.isnan(sgn): sgn = 1
 
             ds = 0
-            x = x_hist[-1]
+            x = x_hist[-1].copy()
             xs = [x_hist[-1]]
             ext_tr = []
             while ds < self._vars[2]*dt:
@@ -116,7 +116,7 @@ class TrajectorySampler:
                 ax.plot(ptss[i][:,0], ptss[i][:,1], color=(redness,0,(1-redness)), lw=2)
             ax.grid(True)
 
-        return end_points, probs, ptss, aug_poses
+        return end_points, probs, ptss, []
 
     def sample_cubic_bspline(self, hist, tr_last, dt):
         x_hist = hist[0]
