@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import importlib
 import os
+import time
 from collections import OrderedDict
 from lib.utils import get_img_list,get_states_data,get_ground_truthes,get_ground_truthes_viot,APCE,PSR
 from cftracker.mosse import MOSSE
@@ -272,7 +273,7 @@ class PyTracker:
 
                 if psr0 is -1: psr0=psr
 
-                ratios.append(psr/psr0)
+                ratios.append([time.time(), psr/psr0])
 
                 ## estimating target location using kinematc model
                 if psr/psr0 > self.ratio_thresh:
