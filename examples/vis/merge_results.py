@@ -33,12 +33,12 @@ for file_name in dir_list:
     if ".txt" in file_name or ".mp4" in file_name:
         continue
 
-    if not "viot" in file_name:
-        continue
+    # if not "viot" in file_name:
+    #     continue
 
-    tracker = splitted_file_name[0]
-    if splitted_file_name[1] == "viot":
-        tracker = splitted_file_name[0] + "_" + splitted_file_name[1]
+    # tracker = splitted_file_name[0]
+    # if splitted_file_name[1] == "viot":
+    #     tracker = splitted_file_name[0] + "_" + splitted_file_name[1]
 
     result_json_path = path + file_name
     if os.path.isdir(result_json_path):
@@ -67,7 +67,10 @@ for file_name in dir_list:
 
             viot_results[key][k] = results[key][k]
 
+for key in viot_results.keys():
+    print(key, viot_results[key].keys())
+
 json_content = json.dumps(viot_results, default=str)
-f = open('../all_results_viot1.json', 'w')
+f = open('../all_results_3.json', 'w')
 f.write(json_content)
 f.close()
