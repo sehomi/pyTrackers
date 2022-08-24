@@ -3,6 +3,7 @@ import scipy.stats as st
 import matplotlib.pyplot as plt
 from geomdl import BSpline
 from configs import KinematicsConfig
+from utils import make_get_proj
 
 class TrajectorySampler:
 
@@ -42,13 +43,15 @@ class TrajectorySampler:
         mean = [np.mean( x_hist ), np.mean( y_hist )]
 
         if vis:
+            plt.rcParams['font.family'] = 'serif'
+            plt.rcParams['font.serif'] = ['Times New Roman'] + plt.rcParams['font.serif']
             fig = plt.figure()
-            # fig.patch.set_facecolor((0.2,0.2,0.2))
             ax = plt.axes(projection ='3d')
             ax.w_xaxis.set_pane_color((0.9, 0.9, 0.9, 1.0))
             ax.w_yaxis.set_pane_color((0.7, 0.7, 0.7, 1.0))
             ax.w_zaxis.set_pane_color((0.8, 0.8, 0.8, 1.0))
-            ax.plot(x_hist, y_hist, np.zeros(len(x_hist)), '.', color='yellow', lw=0.5, label='history')
+
+            ax.plot(x_hist, y_hist, np.zeros(len(x_hist)), '.', color='yellow', markersize=2, lw=0.5, label='history')
 
         aug_poses = []
         if std > self._std_thresh:
@@ -103,14 +106,16 @@ class TrajectorySampler:
         # end_points = [ptss[0][-1]]
 
         trs = []
+        ctrls = []
         ptss = []
         probs = []
         end_points = []
         for i in range(self._num_samples):
-            pts, tr = self.sample_cubic_bspline( (x_hist, y_hist), ext_tr, dt )
+            pts, tr, ctrl = self.sample_cubic_bspline( (x_hist, y_hist), ext_tr, dt )
             probs.append( self.traj_distance(pts, ext_pts) )
             ptss.append(pts)
             trs.append(tr)
+            ctrls.append(ctrl)
             end_points.append(pts[-1,:])
 
         probs = probs / np.sum(probs)
@@ -120,20 +125,27 @@ class TrajectorySampler:
             for i in range(pts.shape[0]):
                 min_prob = np.min(probs)
                 redness = (probs[i]-min_prob) / np.max(probs-min_prob)
-                ax.plot(ptss[i][:,0], ptss[i][:,1], np.zeros(ptss[i].shape[0]), color=((1-redness),0,redness), lw=1, alpha=0.3)
-            
+                clr = ((1-redness),0,redness)
+                ax.plot(ptss[i][:,0], ptss[i][:,1], np.zeros(ptss[i].shape[0]), color=clr, lw=0.6, alpha=0.3)
+                # ax.text(ptss[i][-1,0], ptss[i][-1,1], 0, '{:d}%'.format(int(probs[i]*100)), color=clr, fontsize=7)
+                
                 lengths.append(np.sum( (ptss[i][1:] - ptss[i][:-1])**2 ))
                
             idx = np.argmax(lengths)
             ax.plot(ptss[idx][:,0], ptss[idx][:,1], np.zeros(ptss[idx].shape[0]), color=(redness,0,(1-redness)), lw=1, alpha=1)
-            ax.plot(trs[idx][:,0], trs[idx][:,1], np.zeros(trs[idx].shape[0]), '.', color='black', lw=1)
-            ax.plot(trs[idx][:,0], trs[idx][:,1], np.zeros(trs[idx].shape[0]), color='black', lw=1)
+            ax.plot(ctrls[idx][:,0], ctrls[idx][:,1], np.zeros(ctrls[idx].shape[0]), '.', color='black', lw=1)
+            ax.plot(ctrls[idx][:,0], ctrls[idx][:,1], np.zeros(ctrls[idx].shape[0]), color='black', lw=1, label='control polygon')
+            for l in range(ctrls[idx].shape[0]):
+                ax.text(ctrls[idx][l,0]+0.8, ctrls[idx][l,1]+0.8, 0, '$c_{:d}$'.format(l), color='black', fontsize=10)
+            
             ax.grid(False)
+            ax.legend()
             ax.view_init(elev=45., azim=60)
-            # ax.set_facecolor((0.2,0.2,0.2))
+            ax.get_proj = make_get_proj(ax, 2, 2, 1)
+
             plt.tick_params(left = False, right = False , labelleft = False ,
                 labelbottom = False, bottom = False)
-            plt.savefig('sample.png')
+            plt.savefig('sample.pdf', format="pdf")
 
         return end_points, probs.tolist(), ptss, []
 
@@ -147,7 +159,7 @@ class TrajectorySampler:
         tr_new[2,:] += np.random.normal(0.0, self._vars[2]*dt, 2)
 
         # idx = int( len(x_hist)/2 )
-        idx = np.min((3, len(x_hist)))
+        idx = np.min((7, len(x_hist)))
         self._curve.ctrlpts = [[x_hist[-idx], y_hist[-idx], 0], [x_hist[-1], y_hist[-1], 0], 
                                [tr_new[0,0], tr_new[0,1], 0], [tr_new[1,0], tr_new[1,1], 0], 
                                [tr_new[2,0], tr_new[2,1], 0]]
@@ -157,7 +169,7 @@ class TrajectorySampler:
 
         self._curve_points = np.array( [[p[0],p[1]] for p in self._curve_points] )
 
-        return self._curve_points, tr_new
+        return self._curve_points, tr_new, np.array(self._curve.ctrlpts)
 
 if __name__ == "__main__":
     configs = KinematicsConfig()
