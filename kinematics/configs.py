@@ -8,7 +8,7 @@ class KinematicsConfig:
       'vars' : [0.5, 1.5, 3],
       'aug_vars' : 0.8,
       'std_thresh' : 0.5,
-      'poly_degree' : 1,
-      'bspline_degree' : 4,
+      'poly_degree' : 2,
+      'bspline_degree' : 3,
       'pos_buff_size' : 40
     }

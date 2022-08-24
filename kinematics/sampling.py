@@ -2,6 +2,7 @@ import numpy as np
 import scipy.stats as st
 import matplotlib.pyplot as plt
 from geomdl import BSpline
+from configs import KinematicsConfig
 
 class TrajectorySampler:
 
@@ -41,8 +42,13 @@ class TrajectorySampler:
         mean = [np.mean( x_hist ), np.mean( y_hist )]
 
         if vis:
-            fig, ax = plt.subplots()
-            ax.plot(x_hist, y_hist, 'y-', lw=2, label='history')
+            fig = plt.figure()
+            # fig.patch.set_facecolor((0.2,0.2,0.2))
+            ax = plt.axes(projection ='3d')
+            ax.w_xaxis.set_pane_color((0.9, 0.9, 0.9, 1.0))
+            ax.w_yaxis.set_pane_color((0.7, 0.7, 0.7, 1.0))
+            ax.w_zaxis.set_pane_color((0.8, 0.8, 0.8, 1.0))
+            ax.plot(x_hist, y_hist, np.zeros(len(x_hist)), '.', color='yellow', lw=0.5, label='history')
 
         aug_poses = []
         if std > self._std_thresh:
@@ -81,8 +87,8 @@ class TrajectorySampler:
                     ext_tr.append([x, p(x)])
                 
             if vis:
-                ax.plot(x_hist, p(x_hist), 'r-', lw=2, label='history')
-                ax.plot(xs, p(xs), 'r-', lw=2, label='history')
+                ax.plot(x_hist, p(x_hist), np.zeros(len(x_hist)), 'r-', lw=2)
+                ax.plot(xs, p(xs), np.zeros(len(xs)),  'r-', lw=2, label='fitted curve')
 
             ext_tr = np.array(ext_tr).astype(np.float64)
             ext_pts = np.concatenate( ( np.array(xs).reshape((len(xs),1)), p(xs).reshape((len(xs),1)) ) , axis=1)
@@ -110,11 +116,24 @@ class TrajectorySampler:
         probs = probs / np.sum(probs)
         
         if vis:
+            lengths = []
             for i in range(pts.shape[0]):
                 min_prob = np.min(probs)
                 redness = (probs[i]-min_prob) / np.max(probs-min_prob)
-                ax.plot(ptss[i][:,0], ptss[i][:,1], color=(redness,0,(1-redness)), lw=2)
-            ax.grid(True)
+                ax.plot(ptss[i][:,0], ptss[i][:,1], np.zeros(ptss[i].shape[0]), color=((1-redness),0,redness), lw=1, alpha=0.3)
+            
+                lengths.append(np.sum( (ptss[i][1:] - ptss[i][:-1])**2 ))
+               
+            idx = np.argmax(lengths)
+            ax.plot(ptss[idx][:,0], ptss[idx][:,1], np.zeros(ptss[idx].shape[0]), color=(redness,0,(1-redness)), lw=1, alpha=1)
+            ax.plot(trs[idx][:,0], trs[idx][:,1], np.zeros(trs[idx].shape[0]), '.', color='black', lw=1)
+            ax.plot(trs[idx][:,0], trs[idx][:,1], np.zeros(trs[idx].shape[0]), color='black', lw=1)
+            ax.grid(False)
+            ax.view_init(elev=45., azim=60)
+            # ax.set_facecolor((0.2,0.2,0.2))
+            plt.tick_params(left = False, right = False , labelleft = False ,
+                labelbottom = False, bottom = False)
+            plt.savefig('sample.png')
 
         return end_points, probs.tolist(), ptss, []
 
@@ -133,7 +152,7 @@ class TrajectorySampler:
                                [tr_new[0,0], tr_new[0,1], 0], [tr_new[1,0], tr_new[1,1], 0], 
                                [tr_new[2,0], tr_new[2,1], 0]]
 
-        self._curve.knotvector = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]        
+        self._curve.knotvector = [0, 0, 0, 0, 0, 1, 1, 1, 1]        
         self._curve_points = self._curve.evalpts
 
         self._curve_points = np.array( [[p[0],p[1]] for p in self._curve_points] )
@@ -141,12 +160,14 @@ class TrajectorySampler:
         return self._curve_points, tr_new
 
 if __name__ == "__main__":
-    ts = TrajectorySampler()
+    configs = KinematicsConfig()
+    ts = TrajectorySampler(configs.configs)
 
     x_hist = np.linspace(0, 4, 40)
     x_hist = np.flipud(x_hist)
     x_hist = x_hist.reshape((x_hist.shape[0],1))
-    y_hist = -0.4*x_hist**2 + 0.1*x_hist**3
+    y_hist = -0.4*x_hist**2 + 0.1*x_hist**3 
+    y_hist += np.random.rand(x_hist.shape[0],1)*0.25
 
-    ts.sample_gaussian_trajectories( np.concatenate(( x_hist, y_hist, np.zeros(x_hist.shape) ), axis=1), vis=True )
+    ts.sample_gaussian_trajectories( np.concatenate(( x_hist, y_hist, np.zeros(x_hist.shape) ), axis=1), 0.8, vis=True )
 
