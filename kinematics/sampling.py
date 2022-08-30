@@ -2,8 +2,8 @@ import numpy as np
 import scipy.stats as st
 import matplotlib.pyplot as plt
 from geomdl import BSpline
-from configs import KinematicsConfig
-from utils import make_get_proj
+from kinematics.configs import KinematicsConfig
+from kinematics.utils import make_get_proj
 
 class TrajectorySampler:
 

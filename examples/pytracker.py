@@ -198,6 +198,19 @@ class PyTracker:
 
           elif self._kin_configs.configs['method'] == 'viot':
             out = self.tracker.track(current_frame, FI=est_loc, do_learning=do_learning)
+        
+          elif self._kin_configs.configs['method'] == 'rand' and not do_learning:
+            rand_loc = []
+            for i in range(self._kin_configs.configs['num_samples']):
+                x = np.random.rand()*current_frame.shape[1]
+                y = np.random.rand()*current_frame.shape[0]
+
+                rand_loc.append((int(x), int(y), 0, 0))
+
+            out = self.tracker.track(current_frame, FI=rand_loc, do_learning=do_learning)
+
+          elif self._kin_configs.configs['method'] == 'rand' and do_learning:
+            out = self.tracker.track(current_frame)
 
           elif self._kin_configs.configs['method'] == 'normal':
             out = self.tracker.track(current_frame)
@@ -211,6 +224,16 @@ class PyTracker:
           if self._kin_configs.configs['method'] == 'viot':
             bbox=self.tracker.update(current_frame,vis=verbose,FI=est_loc, \
                                         do_learning=do_learning) ## VIOT
+
+          elif self._kin_configs.configs['method'] == 'rand':
+            rand_loc = []
+            for i in range(self._kin_configs.configs['num_samples']):
+                x = np.random.rand()*current_frame.shape[1]
+                y = np.random.rand()*current_frame.shape[0]
+
+                rand_loc.append((int(x), int(y), 0, 0))
+
+            bbox=self.tracker.update(current_frame, vis=verbose, FI=rand_loc, do_learning=do_learning)
 
           elif self._kin_configs.configs['method'] == 'normal':
             bbox=self.tracker.update(current_frame,vis=verbose)

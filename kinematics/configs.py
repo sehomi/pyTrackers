@@ -1,8 +1,8 @@
 class KinematicsConfig:
 
     configs = {
-      # possible methods: normal, viot, prob
-      'method' : 'prob',
+      # possible methods: normal, viot, prob, rand
+      'method' : 'rand',
       'step_size' : 0.1,
       'num_samples' : 10,
       'vars' : [0.5, 1.5, 3],
