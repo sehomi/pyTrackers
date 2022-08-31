@@ -42,7 +42,7 @@ for f in dir_list:
         dt_normal.append( np.mean(data[1:,0]-data[:-1,0]) )
 
     
-print('dimp_rate: ', np.mean(dt_normal))
-print('dimp_viot_rate: ', np.mean(dt_viot))
-print('dimp_prob_rate: ', np.mean(dt_prob))
-print('dimp_rand_rate: ', np.mean(dt_rand))
+print('dimp_rate: ', 1/np.mean(dt_normal))
+print('dimp_viot_rate: ', 1/np.mean(dt_viot))
+print('dimp_prob_rate: ', 1/np.mean(dt_prob))
+print('dimp_rand_rate: ', 1/np.mean(dt_rand))

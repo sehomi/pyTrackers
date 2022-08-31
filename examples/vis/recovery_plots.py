@@ -131,10 +131,10 @@ def draw_plot(results_json_path):
         dts_motion_dimprand += res[0]
     
     time_step = np.mean(states[1:,0] - states[:-1,0])
-    plt.plot(np.array(range(5)), dts_dimp/all_re, label='DiMP50 ')
-    plt.plot(np.array(range(5)), dts_dimpviot/all_re, label='DiMP50_VIOT ')
-    plt.plot(np.array(range(5)), dts_dimpprob/all_re, label='DiMP50_PROB ')
-    plt.plot(np.array(range(5)), dts_dimprand/all_re, label='DiMP50_RAND ')
+    plt.plot(np.array(range(5)), 100*dts_dimp/all_re, label='DiMP50 ')
+    plt.plot(np.array(range(5)), 100*dts_dimpviot/all_re, label='DiMP50_VIOT ')
+    plt.plot(np.array(range(5)), 100*dts_dimpprob/all_re, label='DiMP50_PROB ')
+    plt.plot(np.array(range(5)), 100*dts_dimprand/all_re, label='DiMP50_RAND ')
     plt.xlabel('Frame Count to Recovery')
     plt.ylabel('Successful Recovery (%)')
     plt.legend()
