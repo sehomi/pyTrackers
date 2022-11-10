@@ -65,7 +65,6 @@ if __name__ == '__main__':
             viot_results[data_name]['gts'].append(list(gt.astype(np.int)))
 
 
-        tracker_prdimp50=PyTracker(img_dir,tracker_type='PRDIMP50',dataset_config=dataset_config)
         tracker_dimp50=PyTracker(img_dir,tracker_type='DIMP50',dataset_config=dataset_config)
 
         method_str = mode_to_str(tracker_dimp50._kin_configs.configs['method'])
@@ -78,13 +77,15 @@ if __name__ == '__main__':
         write_results(data_name, 'dimp50{:s}'.format(method_str), dimp50_results)
         print('dimp50 done!')
         
-        method_str = mode_to_str(tracker_prdimp50._kin_configs.configs['method'])
-        prdimp50_preds=tracker_prdimp50.tracking(verbose=True,video_path="../results/prdimp50{:s}_{:s}.mp4".format(method_str, data_name))
-        prdimp50_results = {}
-        prdimp50_results[data_name] = {}
-        prdimp50_results[data_name]['tracker_prdimp50{:s}_preds'.format(method_str)] = []
-        for prdimp50_pred in prdimp50_preds:
-            prdimp50_results[data_name]['tracker_prdimp50{:s}_preds'.format(method_str)].append(list(prdimp50_pred.astype(np.int)))
-        write_results(data_name, 'prdimp50{:s}'.format(method_str), prdimp50_results)
-        print('prdimp50 done!')
+        # tracker_prdimp50=PyTracker(img_dir,tracker_type='PRDIMP50',dataset_config=dataset_config)
+
+        # method_str = mode_to_str(tracker_prdimp50._kin_configs.configs['method'])
+        # prdimp50_preds=tracker_prdimp50.tracking(verbose=True,video_path="../results/prdimp50{:s}_{:s}.mp4".format(method_str, data_name))
+        # prdimp50_results = {}
+        # prdimp50_results[data_name] = {}
+        # prdimp50_results[data_name]['tracker_prdimp50{:s}_preds'.format(method_str)] = []
+        # for prdimp50_pred in prdimp50_preds:
+        #     prdimp50_results[data_name]['tracker_prdimp50{:s}_preds'.format(method_str)].append(list(prdimp50_pred.astype(np.int)))
+        # write_results(data_name, 'prdimp50{:s}'.format(method_str), prdimp50_results)
+        # print('prdimp50 done!')
 

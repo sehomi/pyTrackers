@@ -8,6 +8,7 @@ from lib.utils import plot_kinematics
 import matplotlib.pyplot as plt
 from kinematics.utils import gps_to_ned, make_DCM
 from kinematics.sampling import TrajectorySampler
+from kinematics.range_estimation import RangeEstimator
 
 class CameraKinematics:
 
@@ -43,6 +44,7 @@ class CameraKinematics:
         self._last_target_states = [False]
 
         self._ts = TrajectorySampler(configs)
+        self._re = RangeEstimator([w,h])
 
         self._vis=vis
         if vis:
@@ -204,6 +206,13 @@ class CameraKinematics:
 
             ## calculate target pos
             target_pos = self.scale_vector(inertia_dir, cam_pos[2]) + cam_pos
+
+            ## find target range
+            rng = self._re.findRange(rect)
+            image = cv.putText(image, "est: {:.1f}".format(rng), (rect[0], rect[1]-20), cv.FONT_HERSHEY_SIMPLEX, 
+                               1, (255,0,0), 1, cv.LINE_AA)
+            image = cv.putText(image, "gth: {:.1f}".format(np.linalg.norm(target_pos-cam_pos)), (rect[0], rect[1]+20), cv.FONT_HERSHEY_SIMPLEX, 
+                               1, (0,0,255), 1, cv.LINE_AA)
 
             # if not gaussian_sampler:
             ## if target is just found, empty the observation buffer to prevent
