@@ -130,6 +130,8 @@ def draw_plot(results_json_path,datalist,dataset_name):
     
     plt.xlabel('Location error threshold')
     plt.ylabel('Precision')
+    plt.xlim([0,50])
+    plt.ylim([0,0.8])
     plt.legend()
     plt.grid()
     plt.savefig(dataset_name + '_precision5.pdf', format="pdf")

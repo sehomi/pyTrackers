@@ -115,6 +115,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     
     plt.xlabel('Duration (frames)')
     plt.ylabel('Average Precision')
+    plt.xlim([0,2200])
     plt.legend()
     plt.grid()
     plt.savefig(dataset_name + '_longevity_5.pdf', format="pdf")

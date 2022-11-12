@@ -137,6 +137,7 @@ def draw_plot(results_json_path):
     plt.plot(np.array(range(5)), 100*dts_dimprand/all_re, label='DiMP50_RAND ')
     plt.xlabel('Frame Count to Recovery')
     plt.ylabel('Successful Recovery (%)')
+    plt.xlim([0,4])
     plt.legend()
     plt.grid()
     ax = plt.gca()
