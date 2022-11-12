@@ -44,7 +44,7 @@ class CameraKinematics:
         self._last_target_states = [False]
 
         self._ts = TrajectorySampler(configs)
-        self._re = RangeEstimator([w,h])
+        self._re = RangeEstimator([w,h], method=configs['range_estimation_method'])
 
         self._vis=vis
         if vis:
@@ -123,23 +123,6 @@ class CameraKinematics:
 
         return (int(X),int(Y))
 
-    def scale_vector(self, v, z):
-
-        if v is None:
-            return None
-
-        ## scale a unit vector v based on the fact that third component should be
-        ## equal to z
-        max_dist = 50
-        if v[2] > 0:
-            factor = np.abs(z) / np.abs(v[2])
-            if np.linalg.norm(factor*v) < max_dist:
-                return factor*v
-            else:
-                return max_dist*v
-        elif v[2] <= 0:
-            return max_dist*v
-
     def limit_vector_to_fov(self, vector):
 
         ## angle between target direction vector and camera forward axis
@@ -205,14 +188,13 @@ class CameraKinematics:
         if rect is not None:
 
             ## calculate target pos
-            target_pos = self.scale_vector(inertia_dir, cam_pos[2]) + cam_pos
+            target_pos = self._re.findPos(rect, inertia_dir, cam_pos[2]) + cam_pos
+            
+            # image = cv.putText(image, "est: {:.1f}".format(rng), (rect[0], rect[1]-20), cv.FONT_HERSHEY_SIMPLEX, 
+            #                 1, (255,0,0), 1, cv.LINE_AA)
+            # image = cv.putText(image, "gth: {:.1f}".format(np.linalg.norm(target_pos-cam_pos)), (rect[0], rect[1]+20), cv.FONT_HERSHEY_SIMPLEX, 
+            #                 1, (0,0,255), 1, cv.LINE_AA)
 
-            ## find target range
-            rng = self._re.findRange(rect)
-            image = cv.putText(image, "est: {:.1f}".format(rng), (rect[0], rect[1]-20), cv.FONT_HERSHEY_SIMPLEX, 
-                               1, (255,0,0), 1, cv.LINE_AA)
-            image = cv.putText(image, "gth: {:.1f}".format(np.linalg.norm(target_pos-cam_pos)), (rect[0], rect[1]+20), cv.FONT_HERSHEY_SIMPLEX, 
-                               1, (0,0,255), 1, cv.LINE_AA)
 
             # if not gaussian_sampler:
             ## if target is just found, empty the observation buffer to prevent

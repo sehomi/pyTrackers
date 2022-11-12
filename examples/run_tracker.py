@@ -20,6 +20,9 @@ import json
 from lib.utils import get_ground_truthes,get_ground_truthes_viot,get_thresh_success_pair,get_thresh_precision_pair,calAUC
 from examples.viotdataset_config import VIOTDatasetConfig
 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning) 
+
 def write_results(data_name, tracker, results):
     json_content = json.dumps(results, default=str)
     f = open('../results/{:s}_{:s}.json'.format(tracker, data_name), 'w')
