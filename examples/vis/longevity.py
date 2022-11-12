@@ -52,10 +52,10 @@ def draw_plot(results_json_path,datalist,dataset_name):
         precisions_dimp50_viot_all = np.zeros_like(precisions_dimp50_all)
         precisions_dimp50_prob_all = np.zeros_like(precisions_dimp50_all)
         precisions_dimp50_rand_all = np.zeros_like(precisions_dimp50_all)
-        precisions_prdimp50_all = np.zeros_like(precisions_dimp50_all)
-        precisions_prdimp50_viot_all = np.zeros_like(precisions_dimp50_all)
-        precisions_prdimp50_prob_all = np.zeros_like(precisions_dimp50_all)
-        precisions_prdimp50_rand_all = np.zeros_like(precisions_dimp50_all)
+        # precisions_prdimp50_all = np.zeros_like(precisions_dimp50_all)
+        # precisions_prdimp50_viot_all = np.zeros_like(precisions_dimp50_all)
+        # precisions_prdimp50_prob_all = np.zeros_like(precisions_dimp50_all)
+        # precisions_prdimp50_rand_all = np.zeros_like(precisions_dimp50_all)
 
         num_videos=0
         for data_name in results.keys():
@@ -73,29 +73,29 @@ def draw_plot(results_json_path,datalist,dataset_name):
             dimp50_viot_preds = get_preds_by_name(data_all, 'tracker_dimp50_viot_preds')[:max_idx,:]
             dimp50_prob_preds = get_preds_by_name(data_all, 'tracker_dimp50_prob_preds')[:max_idx,:]
             dimp50_rand_preds = get_preds_by_name(data_all, 'tracker_dimp50_rand_preds')[:max_idx,:]
-            prdimp50_preds = get_preds_by_name(data_all, 'tracker_prdimp50_preds')[:max_idx,:]
-            prdimp50_viot_preds = get_preds_by_name(data_all, 'tracker_prdimp50_viot_preds')[:max_idx,:]
-            prdimp50_prob_preds = get_preds_by_name(data_all, 'tracker_prdimp50_prob_preds')[:max_idx,:]
-            prdimp50_rand_preds = get_preds_by_name(data_all, 'tracker_prdimp50_rand_preds')[:max_idx,:]
+            # prdimp50_preds = get_preds_by_name(data_all, 'tracker_prdimp50_preds')[:max_idx,:]
+            # prdimp50_viot_preds = get_preds_by_name(data_all, 'tracker_prdimp50_viot_preds')[:max_idx,:]
+            # prdimp50_prob_preds = get_preds_by_name(data_all, 'tracker_prdimp50_prob_preds')[:max_idx,:]
+            # prdimp50_rand_preds = get_preds_by_name(data_all, 'tracker_prdimp50_rand_preds')[:max_idx,:]
 
             precisions_dimp50_all += np.array(get_thresh_precision_pair(gts, dimp50_preds)[1])
             precisions_dimp50_viot_all += np.array(get_thresh_precision_pair(gts, dimp50_viot_preds)[1])
             precisions_dimp50_prob_all += np.array(get_thresh_precision_pair(gts, dimp50_prob_preds)[1])
             precisions_dimp50_rand_all += np.array(get_thresh_precision_pair(gts, dimp50_rand_preds)[1])
-            precisions_prdimp50_all += np.array(get_thresh_precision_pair(gts, prdimp50_preds)[1])
-            precisions_prdimp50_viot_all += np.array(get_thresh_precision_pair(gts, prdimp50_viot_preds)[1])
-            precisions_prdimp50_prob_all += np.array(get_thresh_precision_pair(gts, prdimp50_prob_preds)[1])
-            precisions_prdimp50_rand_all += np.array(get_thresh_precision_pair(gts, prdimp50_rand_preds)[1])
+            # precisions_prdimp50_all += np.array(get_thresh_precision_pair(gts, prdimp50_preds)[1])
+            # precisions_prdimp50_viot_all += np.array(get_thresh_precision_pair(gts, prdimp50_viot_preds)[1])
+            # precisions_prdimp50_prob_all += np.array(get_thresh_precision_pair(gts, prdimp50_prob_preds)[1])
+            # precisions_prdimp50_rand_all += np.array(get_thresh_precision_pair(gts, prdimp50_rand_preds)[1])
 
 
         precisions_dimp50_all /= num_videos
         precisions_dimp50_viot_all /= num_videos
         precisions_dimp50_prob_all /= num_videos
         precisions_dimp50_rand_all /= num_videos
-        precisions_prdimp50_all /= num_videos
-        precisions_prdimp50_viot_all /= num_videos
-        precisions_prdimp50_prob_all /= num_videos
-        precisions_prdimp50_rand_all /= num_videos
+        # precisions_prdimp50_all /= num_videos
+        # precisions_prdimp50_viot_all /= num_videos
+        # precisions_prdimp50_prob_all /= num_videos
+        # precisions_prdimp50_rand_all /= num_videos
 
 
         threshes_precision = np.linspace(0, 50, 101)
@@ -117,7 +117,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     plt.ylabel('Average Precision')
     plt.legend()
     plt.grid()
-    plt.savefig(dataset_name + '_longevity.pdf', format="pdf")
+    plt.savefig(dataset_name + '_longevity_5.pdf', format="pdf")
     plt.clf()
     # plt.show()
 
@@ -125,6 +125,6 @@ def draw_plot(results_json_path,datalist,dataset_name):
 
 
 if __name__=='__main__':
-    result_json_path='../all_results_4.json'
+    result_json_path='../all_results_5.json'
 
     draw_plot(result_json_path,VIOT,'VIOT')
