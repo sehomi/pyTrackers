@@ -233,12 +233,15 @@ class PyTracker:
 
             params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 5.05)
             self.tracker = MixFormerOnline(params, 'got10k_test')
+            self.ethTracker=True
+            self.ratio_thresh=0.5
+            self.interp_factor=0.3
             
         else:
             raise NotImplementedError
 
-        self.viot = True
-        # self.viot = False
+        # self.viot = True
+        self.viot = False
 
 
     def getETHTracker(self, name, params):
@@ -328,12 +331,12 @@ class PyTracker:
                 stop=bbox[2] > width or bbox[3] > height
 
                 ## evaluating tracked target
-                apce = APCE(self.tracker.score)
+                # apce = APCE(self.tracker.score)
                 if self.ethTracker:
-                    psr = apce
+                    psr = 1#apce
                 else:
-                    psr = PSR(self.tracker.score)
-                F_max = np.max(self.tracker.score)
+                    psr = 1#PSR(self.tracker.score)
+                # F_max = np.max(self.tracker.score)
 
                 if psr0 is -1: psr0=psr
 
@@ -350,67 +353,67 @@ class PyTracker:
 
                 x1,y1,w,h=bbox
                 if verbose is True:
-                    if len(current_frame.shape)==2:
-                        current_frame=cv2.cvtColor(current_frame,cv2.COLOR_GRAY2BGR)
-                    score = self.tracker.score
-                    # apce = APCE(score)
-                    # psr = PSR(score)
-                    # F_max = np.max(score)
-                    size=self.tracker.crop_size
-                    score = cv2.resize(score, size)
-                    score -= score.min()
-                    score =score/ score.max()
-                    score = (score * 255).astype(np.uint8)
-                    # score = 255 - score
-                    score = cv2.applyColorMap(score, cv2.COLORMAP_JET)
-                    center = (int(x1+w/2-self.tracker.trans[1]),int(y1+h/2-self.tracker.trans[0]))
-                    x0,y0=center
-                    x0=np.clip(x0,0,width-1)
-                    y0=np.clip(y0,0,height-1)
-                    center=(x0,y0)
-                    xmin = int(center[0]) - size[0] // 2
-                    xmax = int(center[0]) + size[0] // 2 + size[0] % 2
-                    ymin = int(center[1]) - size[1] // 2
-                    ymax = int(center[1]) + size[1] // 2 + size[1] % 2
-                    left = abs(xmin) if xmin < 0 else 0
-                    xmin = 0 if xmin < 0 else xmin
-                    right = width - xmax
-                    xmax = width if right < 0 else xmax
-                    right = size[0] + right if right < 0 else size[0]
-                    top = abs(ymin) if ymin < 0 else 0
-                    ymin = 0 if ymin < 0 else ymin
-                    down = height - ymax
-                    ymax = height if down < 0 else ymax
-                    down = size[1] + down if down < 0 else size[1]
-                    score = score[top:down, left:right]
-                    crop_img = current_frame[ymin:ymax, xmin:xmax]
-                    score_map = cv2.addWeighted(crop_img, 0.6, score, 0.4, 0)
-                    current_frame[ymin:ymax, xmin:xmax] = score_map
+                    # if len(current_frame.shape)==2:
+                    #     current_frame=cv2.cvtColor(current_frame,cv2.COLOR_GRAY2BGR)
+                    # score = self.tracker.score
+                    # # apce = APCE(score)
+                    # # psr = PSR(score)
+                    # # F_max = np.max(score)
+                    # size=self.tracker.crop_size
+                    # score = cv2.resize(score, size)
+                    # score -= score.min()
+                    # score =score/ score.max()
+                    # score = (score * 255).astype(np.uint8)
+                    # # score = 255 - score
+                    # score = cv2.applyColorMap(score, cv2.COLORMAP_JET)
+                    # center = (int(x1+w/2-self.tracker.trans[1]),int(y1+h/2-self.tracker.trans[0]))
+                    # x0,y0=center
+                    # x0=np.clip(x0,0,width-1)
+                    # y0=np.clip(y0,0,height-1)
+                    # center=(x0,y0)
+                    # xmin = int(center[0]) - size[0] // 2
+                    # xmax = int(center[0]) + size[0] // 2 + size[0] % 2
+                    # ymin = int(center[1]) - size[1] // 2
+                    # ymax = int(center[1]) + size[1] // 2 + size[1] % 2
+                    # left = abs(xmin) if xmin < 0 else 0
+                    # xmin = 0 if xmin < 0 else xmin
+                    # right = width - xmax
+                    # xmax = width if right < 0 else xmax
+                    # right = size[0] + right if right < 0 else size[0]
+                    # top = abs(ymin) if ymin < 0 else 0
+                    # ymin = 0 if ymin < 0 else ymin
+                    # down = height - ymax
+                    # ymax = height if down < 0 else ymax
+                    # down = size[1] + down if down < 0 else size[1]
+                    # score = score[top:down, left:right]
+                    # crop_img = current_frame[ymin:ymax, xmin:xmax]
+                    # score_map = cv2.addWeighted(crop_img, 0.6, score, 0.4, 0)
+                    # current_frame[ymin:ymax, xmin:xmax] = score_map
                     show_frame=cv2.rectangle(current_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (255, 0, 0),2)
 
-                    if self.tracker_type=='DIMP50' or self.tracker_type=='KYS' or self.tracker_type=='TOMP' or self.tracker_type=='PRDIMP50':
-                        for zone in self.tracker._sample_coords:
-                            show_frame=cv2.rectangle(show_frame, (int(zone[1]), int(zone[0])), 
-                                                     (int(zone[3]), int(zone[2])), (0, 255, 255),1)
+                    # if self.tracker_type=='DIMP50' or self.tracker_type=='KYS' or self.tracker_type=='TOMP' or self.tracker_type=='PRDIMP50':
+                    #     for zone in self.tracker._sample_coords:
+                    #         show_frame=cv2.rectangle(show_frame, (int(zone[1]), int(zone[0])), 
+                    #                                  (int(zone[3]), int(zone[2])), (0, 255, 255),1)
 
-                    if not psr/psr0>self.ratio_thresh:
-                        show_frame = cv2.line(show_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 0, 255), 2)
-                        show_frame = cv2.line(show_frame, (int(x1+w), int(y1)), (int(x1), int(y1 + h)), (0, 0, 255), 2)
+                    # if not psr/psr0>self.ratio_thresh:
+                    #     show_frame = cv2.line(show_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 0, 255), 2)
+                    #     show_frame = cv2.line(show_frame, (int(x1+w), int(y1)), (int(x1), int(y1 + h)), (0, 0, 255), 2)
 
-                    if self.viot:
-                        p1 = (int(est_loc[0]+est_loc[2]/2-1), int(est_loc[1]+est_loc[3]/2-1))
-                        p2 = (int(est_loc[0]+est_loc[2]/2+1), int(est_loc[1]+est_loc[3]/2+1))
-                        show_frame = cv2.rectangle(show_frame, p1, p2, (255, 0, 0),2)
+                    # if self.viot:
+                    #     p1 = (int(est_loc[0]+est_loc[2]/2-1), int(est_loc[1]+est_loc[3]/2-1))
+                    #     p2 = (int(est_loc[0]+est_loc[2]/2+1), int(est_loc[1]+est_loc[3]/2+1))
+                    #     show_frame = cv2.rectangle(show_frame, p1, p2, (255, 0, 0),2)
 
-                    # cv2.putText(show_frame, 'APCE:' + str(apce)[:5], (0, 250), cv2.FONT_HERSHEY_COMPLEX, 2,
-                    #             (0, 0, 255), 5)
-                    # cv2.putText(show_frame, 'PSR:' + str(psr)[:5], (0, 300), cv2.FONT_HERSHEY_COMPLEX, 2,
-                    #             (255, 0, 0), 5)
-                    # cv2.putText(show_frame, 'Fmax:' + str(F_max)[:5], (0, 350), cv2.FONT_HERSHEY_COMPLEX, 2,
-                    #             (255, 0, 0), 5)
+                    # # cv2.putText(show_frame, 'APCE:' + str(apce)[:5], (0, 250), cv2.FONT_HERSHEY_COMPLEX, 2,
+                    # #             (0, 0, 255), 5)
+                    # # cv2.putText(show_frame, 'PSR:' + str(psr)[:5], (0, 300), cv2.FONT_HERSHEY_COMPLEX, 2,
+                    # #             (255, 0, 0), 5)
+                    # # cv2.putText(show_frame, 'Fmax:' + str(F_max)[:5], (0, 350), cv2.FONT_HERSHEY_COMPLEX, 2,
+                    # #             (255, 0, 0), 5)
 
-                    if not IN_COLAB:
-                        cv2.imshow('demo', show_frame)
+                    # if not IN_COLAB:
+                    #     cv2.imshow('demo', show_frame)
                         
                     if writer is not None:
                         writer.write(show_frame)
