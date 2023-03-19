@@ -4,7 +4,7 @@ import time
 import numpy as np
 import cv2 as cv
 from scipy.spatial.transform import Rotation as R
-from lib.utils import plot_kinematics
+from lib.utils_ import plot_kinematics
 import matplotlib.pyplot as plt
 from kinematics.utils import gps_to_ned, make_DCM
 

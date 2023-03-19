@@ -11,13 +11,17 @@ if IN_COLAB:
         print("**** path not set ****")
         sys.path.insert(0, "/content/pyTrackers")
         print(sys.path)
+    if "/content/pyTrackers/MixFormer" not in sys.path:
+        print("**** path not set ****")
+        sys.path.insert(0, "/content/pyTrackers/MixFormer")
+        print(sys.path)
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from examples.pytracker import PyTracker
 import json
-from lib.utils import get_ground_truthes,get_ground_truthes_viot,get_thresh_success_pair,get_thresh_precision_pair,calAUC
+from lib.utils_ import get_ground_truthes,get_ground_truthes_viot,get_thresh_success_pair,get_thresh_precision_pair,calAUC
 from examples.viotdataset_config import VIOTDatasetConfig
 
 def write_results(data_name, tracker, results):
@@ -62,46 +66,56 @@ if __name__ == '__main__':
         # tracker_strcf=PyTracker(img_dir,tracker_type='STRCF',dataset_config=dataset_config)
         # tracker_csrdcf=PyTracker(img_dir,tracker_type='CSRDCF',dataset_config=dataset_config)
         # tracker_eco=PyTracker(img_dir,tracker_type='ECO',dataset_config=dataset_config)
-        tracker_prdimp50=PyTracker(img_dir,tracker_type='PRDIMP50',dataset_config=dataset_config)
-        tracker_kys=PyTracker(img_dir,tracker_type='KYS',dataset_config=dataset_config)
-        tracker_tomp=PyTracker(img_dir,tracker_type='TOMP',dataset_config=dataset_config)
-        tracker_dimp50=PyTracker(img_dir,tracker_type='DIMP50',dataset_config=dataset_config)
+        # tracker_prdimp50=PyTracker(img_dir,tracker_type='PRDIMP50',dataset_config=dataset_config)
+        # tracker_kys=PyTracker(img_dir,tracker_type='KYS',dataset_config=dataset_config)
+        # tracker_tomp=PyTracker(img_dir,tracker_type='TOMP',dataset_config=dataset_config)
+        # tracker_dimp50=PyTracker(img_dir,tracker_type='DIMP50',dataset_config=dataset_config)
+        tracker_mixformer=PyTracker(img_dir,tracker_type='MIXFORMER_VIT',dataset_config=dataset_config)
 
-        dimp50_preds=tracker_dimp50.tracking(verbose=True,video_path="../results/dimp50_{:s}.mp4".format(data_name))
-        dimp50_results = {}
-        dimp50_results[data_name] = {}
-        dimp50_results[data_name]['tracker_dimp50_preds'] = []
-        for dimp50_pred in dimp50_preds:
-            dimp50_results[data_name]['tracker_dimp50_preds'].append(list(dimp50_pred.astype(np.int)))
-        write_results(data_name, 'dimp50', dimp50_results)
-        print('dimp50 done!')
+        mixformer_preds=tracker_mixformer.tracking(verbose=True,video_path="../results/mixformer_{:s}.mp4".format(data_name))
+        mixformer_results = {}
+        mixformer_results[data_name] = {}
+        mixformer_results[data_name]['tracker_mixformer_preds'] = []
+        for mixformer_pred in mixformer_preds:
+            mixformer_results[data_name]['tracker_mixformer_preds'].append(list(mixformer_pred.astype(np.int)))
+        write_results(data_name, 'mixformer', mixformer_results)
+        print('mixformer done!')
+
+        # dimp50_preds=tracker_dimp50.tracking(verbose=True,video_path="../results/dimp50_{:s}.mp4".format(data_name))
+        # dimp50_results = {}
+        # dimp50_results[data_name] = {}
+        # dimp50_results[data_name]['tracker_dimp50_preds'] = []
+        # for dimp50_pred in dimp50_preds:
+        #     dimp50_results[data_name]['tracker_dimp50_preds'].append(list(dimp50_pred.astype(np.int)))
+        # write_results(data_name, 'dimp50', dimp50_results)
+        # print('dimp50 done!')
         
-        kys_preds=tracker_kys.tracking(verbose=True,video_path="../results/kys_{:s}.mp4".format(data_name))
-        kys_results = {}
-        kys_results[data_name] = {}
-        kys_results[data_name]['tracker_kys_preds'] = []
-        for kys_pred in kys_preds:
-            kys_results[data_name]['tracker_kys_preds'].append(list(kys_pred.astype(np.int)))
-        write_results(data_name, 'kys', kys_results)
-        print('kys done!')
+        # kys_preds=tracker_kys.tracking(verbose=True,video_path="../results/kys_{:s}.mp4".format(data_name))
+        # kys_results = {}
+        # kys_results[data_name] = {}
+        # kys_results[data_name]['tracker_kys_preds'] = []
+        # for kys_pred in kys_preds:
+        #     kys_results[data_name]['tracker_kys_preds'].append(list(kys_pred.astype(np.int)))
+        # write_results(data_name, 'kys', kys_results)
+        # print('kys done!')
 
-        tomp_preds=tracker_tomp.tracking(verbose=True,video_path="../results/tomp_{:s}.mp4".format(data_name))
-        tomp_results = {}
-        tomp_results[data_name] = {}
-        tomp_results[data_name]['tracker_tomp_preds'] = []
-        for tomp_pred in tomp_preds:
-            tomp_results[data_name]['tracker_tomp_preds'].append(list(tomp_pred.astype(np.int)))
-        write_results(data_name, 'tomp', tomp_results)
-        print('tomp done!')
+        # tomp_preds=tracker_tomp.tracking(verbose=True,video_path="../results/tomp_{:s}.mp4".format(data_name))
+        # tomp_results = {}
+        # tomp_results[data_name] = {}
+        # tomp_results[data_name]['tracker_tomp_preds'] = []
+        # for tomp_pred in tomp_preds:
+        #     tomp_results[data_name]['tracker_tomp_preds'].append(list(tomp_pred.astype(np.int)))
+        # write_results(data_name, 'tomp', tomp_results)
+        # print('tomp done!')
 
-        prdimp50_preds=tracker_prdimp50.tracking(verbose=True,video_path="../results/prdimp50_{:s}.mp4".format(data_name))
-        prdimp50_results = {}
-        prdimp50_results[data_name] = {}
-        prdimp50_results[data_name]['tracker_prdimp50_preds'] = []
-        for prdimp50_pred in prdimp50_preds:
-            prdimp50_results[data_name]['tracker_prdimp50_preds'].append(list(prdimp50_pred.astype(np.int)))
-        write_results(data_name, 'prdimp50', prdimp50_results)
-        print('prdimp50 done!')
+        # prdimp50_preds=tracker_prdimp50.tracking(verbose=True,video_path="../results/prdimp50_{:s}.mp4".format(data_name))
+        # prdimp50_results = {}
+        # prdimp50_results[data_name] = {}
+        # prdimp50_results[data_name]['tracker_prdimp50_preds'] = []
+        # for prdimp50_pred in prdimp50_preds:
+        #     prdimp50_results[data_name]['tracker_prdimp50_preds'].append(list(prdimp50_pred.astype(np.int)))
+        # write_results(data_name, 'prdimp50', prdimp50_results)
+        # print('prdimp50 done!')
 
         # # eco_preds = tracker_eco.tracking()
         # # eco_results = {}

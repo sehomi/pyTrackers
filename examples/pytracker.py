@@ -3,24 +3,24 @@ import numpy as np
 import importlib
 import os
 from collections import OrderedDict
-from lib.utils import get_img_list,get_states_data,get_ground_truthes,get_ground_truthes_viot,APCE,PSR
-from cftracker.mosse import MOSSE
-from cftracker.csk import CSK
-from cftracker.kcf import KCF
-from cftracker.cn import CN
-from cftracker.dsst import DSST
-from cftracker.staple import Staple
-from cftracker.dat import DAT
-from cftracker.eco import ECO
-from cftracker.bacf import BACF
-from cftracker.csrdcf import CSRDCF
-from cftracker.samf import SAMF
-from cftracker.ldes import LDES
-from cftracker.mkcfup import MKCFup
-from cftracker.strcf import STRCF
-from cftracker.mccth_staple import MCCTHStaple
-from lib.eco.config import otb_deep_config,otb_hc_config
-from cftracker.config import staple_config,ldes_config,dsst_config,csrdcf_config,mkcf_up_config,mccth_staple_config
+from lib.utils_ import get_img_list,get_states_data,get_ground_truthes,get_ground_truthes_viot,APCE,PSR
+# from cftracker.mosse import MOSSE
+# from cftracker.csk import CSK
+# from cftracker.kcf import KCF
+# from cftracker.cn import CN
+# from cftracker.dsst import DSST
+# from cftracker.staple import Staple
+# from cftracker.dat import DAT
+# from cftracker.eco import ECO
+# from cftracker.bacf import BACF
+# from cftracker.csrdcf import CSRDCF
+# from cftracker.samf import SAMF
+# from cftracker.ldes import LDES
+# from cftracker.mkcfup import MKCFup
+# from cftracker.strcf import STRCF
+# from cftracker.mccth_staple import MCCTHStaple
+# from lib.eco.config import otb_deep_config,otb_hc_config
+# from cftracker.config import staple_config,ldes_config,dsst_config,csrdcf_config,mkcf_up_config,mccth_staple_config
 
 from kinematics.camera_kinematics import CameraKinematics
 
@@ -227,6 +227,13 @@ class PyTracker:
             except:
                 self.interp_factor=0.3
 
+        elif self.tracker_type=='MIXFORMER_VIT':
+            from lib.test.tracker.mixformer_vit import MixFormer
+            from lib.test.parameter.mixformer_vit import parameters
+
+            params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 5.05)
+            self.tracker = MixFormer(params, 'got10k_test')
+            
         else:
             raise NotImplementedError
 
