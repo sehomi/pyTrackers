@@ -282,6 +282,7 @@ def get_mixformer_vit(config, train):
     return vit
 
 
+
 class MixFormer(nn.Module):
     def __init__(self, backbone, box_head, head_type="CORNER"):
         """ Initializes the model.

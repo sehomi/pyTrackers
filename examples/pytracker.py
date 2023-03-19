@@ -228,11 +228,11 @@ class PyTracker:
                 self.interp_factor=0.3
 
         elif self.tracker_type=='MIXFORMER_VIT':
-            from lib.test.tracker.mixformer_vit import MixFormer
-            from lib.test.parameter.mixformer_vit import parameters
+            from lib.test.tracker.mixformer_vit_online import MixFormerOnline
+            from lib.test.parameter.mixformer_vit_online import parameters
 
             params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 5.05)
-            self.tracker = MixFormer(params, 'got10k_test')
+            self.tracker = MixFormerOnline(params, 'got10k_test')
             
         else:
             raise NotImplementedError
