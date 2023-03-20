@@ -7,7 +7,7 @@ import os
 from lib.models.mixformer_vit import build_mixformer_vit_online_score
 from lib.test.tracker.tracker_utils import Preprocessor_wo_mask
 from lib.utils.box_ops import clip_box
-
+import numpy as np
 
 class MixFormerOnline(BaseTracker):
     def __init__(self, params, dataset_name):
@@ -60,8 +60,9 @@ class MixFormerOnline(BaseTracker):
 
     def initialize(self, image, info: dict):
         # forward the template once
-        z_patch_arr, _, z_amask_arr = sample_target(image, info['init_bbox'], self.params.template_factor,
+        z_patch_arr, _, z_amask_arr, _, rect_ = sample_target(image, info['init_bbox'], self.params.template_factor,
                                                     output_sz=self.params.template_size)
+        self._sample_coords = [rect_]
         template = self.preprocessor.process(z_patch_arr)
         self.template = template
         self.online_template = template
@@ -88,10 +89,10 @@ class MixFormerOnline(BaseTracker):
         H, W, _ = image.shape
         self.frame_id += 1
 
-        x_patch_arr, resize_factor, x_amask_arr, rect_1 = sample_target(image, self.state, self.params.search_factor,
+        x_patch_arr, resize_factor, x_amask_arr, _, rect_1 = sample_target(image, self.state, self.params.search_factor,
                                                                 output_sz=self.params.search_size)  # (x1, y1, w, h)
     
-        x_patch_arr_2, resize_factor_2, x_amask_arr_2, rect_2 = sample_target_multiloc(image, self.state, FI, self.params.search_factor,
+        x_patch_arr_2, resize_factor_2, x_amask_arr_2, _, rect_2 = sample_target_multiloc(image, self.state, FI, self.params.search_factor,
                                                                 output_sz=self.params.search_size)
 
         x_patch_arrs = [x_patch_arr, x_patch_arr_2]
@@ -137,7 +138,7 @@ class MixFormerOnline(BaseTracker):
         # update template
         if do_learning:
             if pred_score > 0.5 and pred_score > self.max_pred_score:
-                z_patch_arr, _, z_amask_arr = sample_target(image, self.state,
+                z_patch_arr, _, z_amask_arr, _, _ = sample_target(image, self.state,
                                                             self.params.template_factor,
                                                             output_sz=self.params.template_size)  # (x1, y1, w, h)
                 self.online_max_template = self.preprocessor.process(z_patch_arr)

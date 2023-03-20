@@ -49,6 +49,14 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None, mask=None):
     if mask is not None:
         mask_crop = mask[y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad]
 
+    x_rect_1 = x1 + x1_pad
+    y_rect_1 = y1 + y1_pad
+    x_rect_2 = x2 - x2_pad
+    y_rect_2 = y2 - y2_pad
+    # w_rect = abs(y2 - y2_pad - y_rect_1)
+    # h_rect = abs(x2 - x2_pad - x_rect_1)
+    show_rect = (x_rect_1, y_rect_1, x_rect_2, y_rect_2)
+
     # Pad
     im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT)
     # deal with attention mask
@@ -69,15 +77,15 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None, mask=None):
         im_crop_padded = cv.resize(im_crop_padded, (output_sz, output_sz))
         att_mask = cv.resize(att_mask, (output_sz, output_sz)).astype(np.bool_)
         if mask is None:
-            return im_crop_padded, resize_factor, att_mask
+            return im_crop_padded, resize_factor, att_mask, None, show_rect
         mask_crop_padded = \
         F.interpolate(mask_crop_padded[None, None], (output_sz, output_sz), mode='bilinear', align_corners=False)[0, 0]
-        return im_crop_padded, resize_factor, att_mask, mask_crop_padded
+        return im_crop_padded, resize_factor, att_mask, mask_crop_padded, show_rect
 
     else:
         if mask is None:
-            return im_crop_padded, att_mask.astype(np.bool_), 1.0
-        return im_crop_padded, 1.0, att_mask.astype(np.bool_), mask_crop_padded
+            return im_crop_padded, att_mask.astype(np.bool_), 1.0, None, show_rect
+        return im_crop_padded, 1.0, att_mask.astype(np.bool_), mask_crop_padded, show_rect
 
 
 def sample_target_multiloc(im, target_bb, search_roi, search_area_factor, output_sz=None, mask=None):
@@ -94,14 +102,19 @@ def sample_target_multiloc(im, target_bb, search_roi, search_area_factor, output
         float - the factor by which the crop has been resized to make the crop size equal output_size
     """
     if not isinstance(target_bb, list):
-        _, _, w, h = target_bb.tolist()
+        x_, y_, w, h = target_bb.tolist()
     else:
-        _, _, w, h = target_bb
+        x_, y_, w, h = target_bb
 
-    if not isinstance(search_roi, list):
-        x, y, _, _ = search_roi.tolist()
+    if search_roi is None:
+        x = x_
+        y = y_
     else:
-        x, y, _, _ = search_roi
+        if not isinstance(search_roi, list):
+            x, y, _, _ = search_roi.tolist()
+        else:
+            x, y, _, _ = search_roi
+
 
     # Crop image
     crop_sz = math.ceil(math.sqrt(w * h) * search_area_factor)
@@ -153,14 +166,14 @@ def sample_target_multiloc(im, target_bb, search_roi, search_area_factor, output
         im_crop_padded = cv.resize(im_crop_padded, (output_sz, output_sz))
         att_mask = cv.resize(att_mask, (output_sz, output_sz)).astype(np.bool_)
         if mask is None:
-            return im_crop_padded, resize_factor, att_mask
+            return im_crop_padded, resize_factor, att_mask, None, show_rect
         mask_crop_padded = \
         F.interpolate(mask_crop_padded[None, None], (output_sz, output_sz), mode='bilinear', align_corners=False)[0, 0]
         return im_crop_padded, resize_factor, att_mask, mask_crop_padded, show_rect
 
     else:
         if mask is None:
-            return im_crop_padded, att_mask.astype(np.bool_), 1.0
+            return im_crop_padded, att_mask.astype(np.bool_), 1.0, None, show_rect
         return im_crop_padded, 1.0, att_mask.astype(np.bool_), mask_crop_padded, show_rect
 
 

@@ -331,10 +331,10 @@ class PyTracker:
                 stop=bbox[2] > width or bbox[3] > height
 
                 ## evaluating tracked target
-                apce = APCE(self.tracker.score)
                 if self.tracker_type == 'MIXFORMER_VIT':
                     psr = self.tracker.pred_score
                 elif self.ethTracker:
+                    apce = APCE(self.tracker.score)
                     psr = apce
                 else:
                     psr = PSR(self.tracker.score)
@@ -354,6 +354,7 @@ class PyTracker:
 
                 x1,y1,w,h=bbox
                 if verbose is True:
+                    show_frame=cv2.rectangle(current_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (255, 0, 0),2)
                     if self.tracker_type == 'MIXFORMER_VIT':
                         for zone in self.tracker._sample_coords:
                             show_frame=cv2.rectangle(show_frame, (int(zone[1]), int(zone[0])), 
@@ -417,8 +418,6 @@ class PyTracker:
                         if not IN_COLAB:
                             cv2.imshow('demo', show_frame)
 
-                    show_frame=cv2.rectangle(current_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (255, 0, 0),2)
-                        
                     if writer is not None:
                         writer.write(show_frame)
                     cv2.waitKey(1)
