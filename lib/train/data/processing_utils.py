@@ -55,7 +55,7 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None, mask=None):
     y_rect_2 = y2 - y2_pad
     # w_rect = abs(y2 - y2_pad - y_rect_1)
     # h_rect = abs(x2 - x2_pad - x_rect_1)
-    show_rect = (x_rect_1, y_rect_1, x_rect_2, y_rect_2)
+    show_rect = (y_rect_1, x_rect_1, y_rect_2, x_rect_2)
 
     # Pad
     im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT)
@@ -110,10 +110,10 @@ def sample_target_multiloc(im, target_bb, search_roi, search_area_factor, output
         x = x_
         y = y_
     else:
-        if not isinstance(search_roi, list):
-            x, y, _, _ = search_roi.tolist()
-        else:
-            x, y, _, _ = search_roi
+        x, y, _, _ = search_roi
+        # if not isinstance(search_roi, list):
+        #     x, y, _, _ = search_roi.tolist()
+        # else:
 
 
     # Crop image
@@ -145,7 +145,7 @@ def sample_target_multiloc(im, target_bb, search_roi, search_area_factor, output
     y_rect_2 = y2 - y2_pad
     # w_rect = abs(y2 - y2_pad - y_rect_1)
     # h_rect = abs(x2 - x2_pad - x_rect_1)
-    show_rect = (x_rect_1, y_rect_1, x_rect_2, y_rect_2)
+    show_rect = (y_rect_1, x_rect_1, y_rect_2, x_rect_2)
     # Pad
     im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT)
     # deal with attention mask

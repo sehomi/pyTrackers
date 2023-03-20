@@ -240,8 +240,8 @@ class PyTracker:
         else:
             raise NotImplementedError
 
-        # self.viot = True
-        self.viot = False
+        self.viot = True
+        # self.viot = False
 
 
     def getETHTracker(self, name, params):
