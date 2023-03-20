@@ -5,6 +5,8 @@
 *.pytest_cache
 *.ipynb_checkpoints/
 /dataset/
+dataset/
+MixFormer/models/
 /results/CF
 /results/tmp
 /eval/test
