@@ -4,11 +4,9 @@
 *.pyc
 *.pytest_cache
 *.ipynb_checkpoints/
-/dataset/
 dataset/
 MixFormer/models/
-/results/CF
-/results/tmp
+results/
 /eval/test
 .eval/log_test.txt
 .eval/log_test_vot2016.txt
