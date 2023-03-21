@@ -234,8 +234,8 @@ class PyTracker:
             params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 5.05)
             self.tracker = MixFormerOnline(params, 'got10k_test')
             self.ethTracker=True
-            self.ratio_thresh=0.5
-            self.interp_factor=0.3
+            self.ratio_thresh=0.7
+            self.interp_factor=1.0
             
         else:
             raise NotImplementedError
@@ -355,6 +355,9 @@ class PyTracker:
                 x1,y1,w,h=bbox
                 if verbose is True:
                     show_frame=cv2.rectangle(current_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (255, 0, 0),2)
+                    if (psr/psr0) <= self.ratio_thresh:
+                        show_frame = cv2.line(show_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 0, 255), 2)
+                        show_frame = cv2.line(show_frame, (int(x1+w), int(y1)), (int(x1), int(y1 + h)), (0, 0, 255), 2)
                     if self.tracker_type == 'MIXFORMER_VIT':
                         for zone in self.tracker._sample_coords:
                             show_frame=cv2.rectangle(show_frame, (int(zone[1]), int(zone[0])), 
@@ -398,10 +401,6 @@ class PyTracker:
                             for zone in self.tracker._sample_coords:
                                 show_frame=cv2.rectangle(show_frame, (int(zone[1]), int(zone[0])), 
                                                          (int(zone[3]), int(zone[2])), (0, 255, 255),1)
-
-                        if (psr/psr0) <= self.ratio_thresh:
-                            show_frame = cv2.line(show_frame, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), (0, 0, 255), 2)
-                            show_frame = cv2.line(show_frame, (int(x1+w), int(y1)), (int(x1), int(y1 + h)), (0, 0, 255), 2)
 
                         if self.viot:
                             p1 = (int(est_loc[0]+est_loc[2]/2-1), int(est_loc[1]+est_loc[3]/2-1))

@@ -24,9 +24,9 @@ import json
 from lib.utils_ import get_ground_truthes,get_ground_truthes_viot,get_thresh_success_pair,get_thresh_precision_pair,calAUC
 from examples.viotdataset_config import VIOTDatasetConfig
 
-def write_results(data_name, tracker, results):
+def write_results(data_name, tracker, results, viot=""):
     json_content = json.dumps(results, default=str)
-    f = open('../results/{:s}_{:s}.json'.format(tracker, data_name), 'w')
+    f = open('../results/{:s}_{:s}{:s}.json'.format(tracker, data_name, viot), 'w')
     f.write(json_content)
     f.close()
 
@@ -81,7 +81,10 @@ if __name__ == '__main__':
         mixformer_results[data_name]['tracker_mixformer_preds'] = []
         for mixformer_pred in mixformer_preds:
             mixformer_results[data_name]['tracker_mixformer_preds'].append(list(mixformer_pred.astype(np.int)))
-        write_results(data_name, 'mixformer', mixformer_results)
+        if tracker_mixformer.viot:
+            write_results(data_name, 'mixformer', mixformer_results, viot="_viot")
+        else:
+            write_results(data_name, 'mixformer', mixformer_results)
         print('mixformer done!')
 
         # dimp50_preds=tracker_dimp50.tracking(verbose=True,video_path="../results/dimp50_{:s}.mp4".format(data_name))
