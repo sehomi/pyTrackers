@@ -9,7 +9,6 @@ import random
 Replace cv.BORDER_REPLICATE with cv.BORDER_CONSTANT
 Add a variable called att_mask for computing attention and positional encoding later'''
 
-
 def sample_target(im, target_bb, search_area_factor, output_sz=None, mask=None):
     """ Extracts a square crop centered at target_bb box, of area search_area_factor^2 times target_bb area
 
@@ -50,6 +49,14 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None, mask=None):
     if mask is not None:
         mask_crop = mask[y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad]
 
+    x_rect_1 = x1 + x1_pad
+    y_rect_1 = y1 + y1_pad
+    x_rect_2 = x2 - x2_pad
+    y_rect_2 = y2 - y2_pad
+    # w_rect = abs(y2 - y2_pad - y_rect_1)
+    # h_rect = abs(x2 - x2_pad - x_rect_1)
+    show_rect = (y_rect_1, x_rect_1, y_rect_2, x_rect_2)
+
     # Pad
     im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT)
     # deal with attention mask
@@ -70,15 +77,104 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None, mask=None):
         im_crop_padded = cv.resize(im_crop_padded, (output_sz, output_sz))
         att_mask = cv.resize(att_mask, (output_sz, output_sz)).astype(np.bool_)
         if mask is None:
-            return im_crop_padded, resize_factor, att_mask
+            return im_crop_padded, resize_factor, att_mask, None, show_rect
         mask_crop_padded = \
         F.interpolate(mask_crop_padded[None, None], (output_sz, output_sz), mode='bilinear', align_corners=False)[0, 0]
-        return im_crop_padded, resize_factor, att_mask, mask_crop_padded
+        return im_crop_padded, resize_factor, att_mask, mask_crop_padded, show_rect
 
     else:
         if mask is None:
-            return im_crop_padded, att_mask.astype(np.bool_), 1.0
-        return im_crop_padded, 1.0, att_mask.astype(np.bool_), mask_crop_padded
+            return im_crop_padded, att_mask.astype(np.bool_), 1.0, None, show_rect
+        return im_crop_padded, 1.0, att_mask.astype(np.bool_), mask_crop_padded, show_rect
+
+
+def sample_target_multiloc(im, target_bb, search_roi, search_area_factor, output_sz=None, mask=None):
+    """ Extracts a square crop centered at target_bb box, of area search_area_factor^2 times target_bb area
+
+    args:
+        im - cv image
+        target_bb - target box [x, y, w, h]
+        search_area_factor - Ratio of crop size to target size
+        output_sz - (float) Size to which the extracted crop is resized (always square). If None, no resizing is done.
+
+    returns:
+        cv image - extracted crop
+        float - the factor by which the crop has been resized to make the crop size equal output_size
+    """
+    if not isinstance(target_bb, list):
+        x_, y_, w, h = target_bb.tolist()
+    else:
+        x_, y_, w, h = target_bb
+
+    if search_roi is None:
+        x = x_
+        y = y_
+    else:
+        x, y, _, _ = search_roi
+        # if not isinstance(search_roi, list):
+        #     x, y, _, _ = search_roi.tolist()
+        # else:
+
+
+    # Crop image
+    crop_sz = math.ceil(math.sqrt(w * h) * search_area_factor)
+
+    if crop_sz < 1:
+        raise Exception('Too small bounding box.')
+
+    x1 = int(round(x + 0.5 * w - crop_sz * 0.5))
+    x2 = int(x1 + crop_sz)
+
+    y1 = int(round(y + 0.5 * h - crop_sz * 0.5))
+    y2 = int(y1 + crop_sz)
+
+    x1_pad = int(max(0, -x1))
+    x2_pad = int(max(x2 - im.shape[1] + 1, 0))
+
+    y1_pad = int(max(0, -y1))
+    y2_pad = int(max(y2 - im.shape[0] + 1, 0))
+
+    # Crop target
+    im_crop = im[y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad, :]
+    if mask is not None:
+        mask_crop = mask[y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad]
+
+    x_rect_1 = x1 + x1_pad
+    y_rect_1 = y1 + y1_pad
+    x_rect_2 = x2 - x2_pad
+    y_rect_2 = y2 - y2_pad
+    # w_rect = abs(y2 - y2_pad - y_rect_1)
+    # h_rect = abs(x2 - x2_pad - x_rect_1)
+    show_rect = (y_rect_1, x_rect_1, y_rect_2, x_rect_2)
+    # Pad
+    im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT)
+    # deal with attention mask
+    H, W, _ = im_crop_padded.shape
+    att_mask = np.ones((H,W))
+    end_x, end_y = -x2_pad, -y2_pad
+    if y2_pad == 0:
+        end_y = None
+    if x2_pad == 0:
+        end_x = None
+    att_mask[y1_pad:end_y, x1_pad:end_x] = 0
+    if mask is not None:
+        mask_crop_padded = F.pad(mask_crop, pad=(x1_pad, x2_pad, y1_pad, y2_pad), mode='constant', value=0)
+
+
+    if output_sz is not None:
+        resize_factor = output_sz / crop_sz
+        im_crop_padded = cv.resize(im_crop_padded, (output_sz, output_sz))
+        att_mask = cv.resize(att_mask, (output_sz, output_sz)).astype(np.bool_)
+        if mask is None:
+            return im_crop_padded, resize_factor, att_mask, None, show_rect
+        mask_crop_padded = \
+        F.interpolate(mask_crop_padded[None, None], (output_sz, output_sz), mode='bilinear', align_corners=False)[0, 0]
+        return im_crop_padded, resize_factor, att_mask, mask_crop_padded, show_rect
+
+    else:
+        if mask is None:
+            return im_crop_padded, att_mask.astype(np.bool_), 1.0, None, show_rect
+        return im_crop_padded, 1.0, att_mask.astype(np.bool_), mask_crop_padded, show_rect
 
 
 def transform_image_to_crop(box_in: torch.Tensor, box_extract: torch.Tensor, resize_factor: float,

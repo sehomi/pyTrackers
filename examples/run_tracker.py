@@ -72,7 +72,10 @@ if __name__ == '__main__':
         # tracker_dimp50=PyTracker(img_dir,tracker_type='DIMP50',dataset_config=dataset_config)
         tracker_mixformer=PyTracker(img_dir,tracker_type='MIXFORMER_VIT',dataset_config=dataset_config)
 
-        mixformer_preds=tracker_mixformer.tracking(verbose=True,video_path="../results/mixformer_{:s}.mp4".format(data_name))
+        if tracker_mixformer.viot:
+            mixformer_preds=tracker_mixformer.tracking(verbose=True,video_path="../results/mixformer_{:s}_viot.mp4".format(data_name))
+        else:
+            mixformer_preds=tracker_mixformer.tracking(verbose=True,video_path="../results/mixformer_{:s}.mp4".format(data_name))
         mixformer_results = {}
         mixformer_results[data_name] = {}
         mixformer_results[data_name]['tracker_mixformer_preds'] = []
