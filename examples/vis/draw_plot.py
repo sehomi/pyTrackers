@@ -16,7 +16,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from examples.vis.VIOT_info import VIOT
-from lib.utils import get_thresh_precision_pair,get_thresh_success_pair,calAUC
+from lib.utils_ import get_thresh_precision_pair,get_thresh_success_pair,calAUC
 
 
 def get_preds_by_name(preds_dict,key):
@@ -24,7 +24,7 @@ def get_preds_by_name(preds_dict,key):
                 'dcf_hog_preds','mosse','csk','eco_hc','kcf_cn','kcf_pyECO_cn',
                 'kcf_pyECO_hog','cn','DSST','DAT','Staple', 'ldes_preds',
                 'strcf_preds', 'csrdcf_preds', 'tracker_dimp50_preds', 'tracker_kys_preds',
-                'tracker_tomp_preds','tracker_prdimp50_preds']
+                'tracker_tomp_preds','tracker_prdimp50_preds', 'tracker_mixformer_preds']
     assert key in valid_keys
     str_preds=preds_dict[key]
     np_preds=[]
@@ -47,6 +47,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     precisions_kys_all = np.zeros_like(precisions_kcf_gray_all)
     precisions_prdimp50_all = np.zeros_like(precisions_kcf_gray_all)
     precisions_tomp_all = np.zeros_like(precisions_kcf_gray_all)
+    precisions_mixformer_all = np.zeros_like(precisions_kcf_gray_all)
     # precisions_dcf_gray_all = np.zeros_like(precisions_kcf_gray_all)
     # precisions_dcf_hog_all = np.zeros_like(precisions_kcf_gray_all)
     # precisions_mosse_all = np.zeros_like(precisions_kcf_gray_all)
@@ -69,6 +70,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     successes_prdimp50_all = np.zeros_like(successes_kcf_gray_all)
     successes_tomp_all = np.zeros_like(successes_kcf_gray_all)
     successes_kys_all = np.zeros_like(successes_kcf_gray_all)
+    successes_mixformer_all = np.zeros_like(successes_kcf_gray_all)
     # successes_dcf_gray_all = np.zeros_like(successes_kcf_gray_all)
     # successes_dcf_hog_all = np.zeros_like(successes_kcf_gray_all)
     # successes_mosse_all = np.zeros_like(successes_kcf_gray_all)
@@ -99,6 +101,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
         prdimp50_preds = get_preds_by_name(data_all, 'tracker_prdimp50_preds')
         tomp_preds = get_preds_by_name(data_all, 'tracker_tomp_preds')
         kys_preds = get_preds_by_name(data_all, 'tracker_kys_preds')
+        mixformer_preds = get_preds_by_name(data_all, 'tracker_mixformer_preds')
         # dcf_gray_preds = get_preds_by_name(data_all, 'dcf_gray_preds')
         # dcf_hog_preds = get_preds_by_name(data_all, 'dcf_hog_preds')
         # mosse_preds = get_preds_by_name(data_all, 'mosse')
@@ -121,6 +124,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
         precisions_prdimp50_all += np.array(get_thresh_precision_pair(gts, prdimp50_preds)[1])
         precisions_tomp_all += np.array(get_thresh_precision_pair(gts, tomp_preds)[1])
         precisions_kys_all += np.array(get_thresh_precision_pair(gts, kys_preds)[1])
+        precisions_mixformer_all += np.array(get_thresh_precision_pair(gts, mixformer_preds)[1])
         # precisions_dcf_gray_all += np.array(get_thresh_precision_pair(gts, dcf_gray_preds)[1])
         # precisions_dcf_hog_all += np.array(get_thresh_precision_pair(gts, dcf_hog_preds)[1])
         # precisions_mosse_all += np.array(get_thresh_precision_pair(gts, mosse_preds)[1])
@@ -143,6 +147,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
         successes_prdimp50_all += np.array(get_thresh_success_pair(gts, prdimp50_preds)[1])
         successes_kys_all += np.array(get_thresh_success_pair(gts, kys_preds)[1])
         successes_tomp_all += np.array(get_thresh_success_pair(gts, tomp_preds)[1])
+        successes_mixformer_all += np.array(get_thresh_success_pair(gts, mixformer_preds)[1])
         # successes_dcf_gray_all += np.array(get_thresh_success_pair(gts, dcf_gray_preds)[1])
         # successes_dcf_hog_all += np.array(get_thresh_success_pair(gts, dcf_hog_preds)[1])
         # successes_mosse_all += np.array(get_thresh_success_pair(gts, mosse_preds)[1])
@@ -165,6 +170,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     precisions_prdimp50_all /= num_videos
     precisions_kys_all /= num_videos
     precisions_tomp_all /= num_videos
+    precisions_mixformer_all /= num_videos
     # precisions_dcf_gray_all /= num_videos
     # precisions_dcf_hog_all /= num_videos
     # precisions_csk_all /= num_videos
@@ -187,6 +193,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     successes_prdimp50_all /= num_videos
     successes_kys_all /= num_videos
     successes_tomp_all /= num_videos
+    successes_mixformer_all /= num_videos
     # successes_dcf_gray_all /= num_videos
     # successes_dcf_hog_all /= num_videos
     # successes_csk_all /= num_videos
@@ -214,6 +221,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     plt.plot(threshes_precision, precisions_prdimp50_all, label='PrDiMP50 ' + str(precisions_prdimp50_all[idx20])[:5])
     plt.plot(threshes_precision, precisions_kys_all, label='KYS ' + str(precisions_kys_all[idx20])[:5])
     plt.plot(threshes_precision, precisions_tomp_all, label='ToMP ' + str(precisions_tomp_all[idx20])[:5])
+    plt.plot(threshes_precision, precisions_mixformer_all, label='MixFormer ' + str(precisions_mixformer_all[idx20])[:5])
     #plt.plot(threshes_precision, precisions_dcf_gray_all, label='DCF_GRAY ' + str(precisions_dcf_gray_all[idx20])[:5])
     # plt.plot(threshes_precision, precisions_dcf_hog_all, label='DCF_HOG ' + str(precisions_dcf_hog_all[idx20])[:5])
     # plt.plot(threshes_precision, precisions_mosse_all, label='MOSSE ' + str(precisions_mosse_all[idx20])[:5])
@@ -243,6 +251,7 @@ def draw_plot(results_json_path,datalist,dataset_name):
     plt.plot(threshes_success, successes_prdimp50_all, label='PrDiMP50 ' + str(calAUC(successes_prdimp50_all))[:5])
     plt.plot(threshes_success, successes_kys_all, label='KYS ' + str(calAUC(successes_kys_all))[:5])
     plt.plot(threshes_success, successes_tomp_all, label='ToMP ' + str(calAUC(successes_tomp_all))[:5])
+    plt.plot(threshes_success, successes_mixformer_all, label='MixFormer ' + str(calAUC(successes_mixformer_all))[:5])
     #plt.plot(threshes_success, successes_dcf_gray_all, label='DCF_GRAY ' + str(calAUC(successes_dcf_gray_all))[:5])
     # plt.plot(threshes_success, successes_dcf_hog_all, label='DCF_HOG ' + str(calAUC(successes_dcf_hog_all))[:5])
     # plt.plot(threshes_success, successes_mosse_all, label='MOSSE ' + str(calAUC(successes_mosse_all))[:5])
@@ -264,6 +273,6 @@ def draw_plot(results_json_path,datalist,dataset_name):
 
 
 if __name__=='__main__':
-    result_json_path='../all_results.json'
+    result_json_path='../all_results_mixformer.json'
 
-    draw_plot(result_json_path,VIOT,'VIOT')
+    draw_plot(result_json_path,VIOT,'NEW')
