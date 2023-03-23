@@ -92,9 +92,9 @@ class MixFormerOnline(BaseTracker):
         if last_state is not None:
             self.state = last_state
 
-        x_patch_arr, resize_factor, x_amask_arr, _, rect_1 = sample_target(image, self.state, self.params.search_factor,
+        x_patch_arr, resize_factor, x_amask_arr, _, rect_1 = sample_target(image, np.array(self.state), self.params.search_factor,
                                                             output_sz=self.params.search_size)  # (x1, y1, w, h)
-        x_patch_arr_2, resize_factor_2, x_amask_arr_2, _, rect_2 = sample_target_multiloc(image, self.state, FI, self.params.search_factor,
+        x_patch_arr_2, resize_factor_2, x_amask_arr_2, _, rect_2 = sample_target_multiloc(image, np.array(self.state), FI, self.params.search_factor,
                                                             output_sz=self.params.search_size)
         # else:
         #     x_patch_arr, resize_factor, x_amask_arr, _, rect_1 = sample_target(image, last_state, self.params.search_factor,
