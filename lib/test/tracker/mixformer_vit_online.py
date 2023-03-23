@@ -85,16 +85,24 @@ class MixFormerOnline(BaseTracker):
             all_boxes_save = info['init_bbox'] * self.cfg.MODEL.NUM_OBJECT_QUERIES
             return {"all_boxes": all_boxes_save}
 
-    def track(self, image, FI: list = None, do_learning=True, info: dict = None):
+    def track(self, image, last_state = None, FI: list = None, do_learning=True, info: dict = None):
         H, W, _ = image.shape
         self.frame_id += 1
 
-        x_patch_arr, resize_factor, x_amask_arr, _, rect_1 = sample_target(image, self.state, self.params.search_factor,
-                                                                output_sz=self.params.search_size)  # (x1, y1, w, h)
-    
-        x_patch_arr_2, resize_factor_2, x_amask_arr_2, _, rect_2 = sample_target_multiloc(image, self.state, FI, self.params.search_factor,
-                                                                output_sz=self.params.search_size)
+        if last_state is not None:
+            self.state = last_state
 
+        x_patch_arr, resize_factor, x_amask_arr, _, rect_1 = sample_target(image, self.state, self.params.search_factor,
+                                                            output_sz=self.params.search_size)  # (x1, y1, w, h)
+        x_patch_arr_2, resize_factor_2, x_amask_arr_2, _, rect_2 = sample_target_multiloc(image, self.state, FI, self.params.search_factor,
+                                                            output_sz=self.params.search_size)
+        # else:
+        #     x_patch_arr, resize_factor, x_amask_arr, _, rect_1 = sample_target(image, last_state, self.params.search_factor,
+        #                                                         output_sz=self.params.search_size)  # (x1, y1, w, h)
+        #     x_patch_arr_2, resize_factor_2, x_amask_arr_2, _, rect_2 = sample_target_multiloc(image, last_state, FI, self.params.search_factor,
+        #                                                         output_sz=self.params.search_size)
+
+        prev_boxes = [self.state, FI]
         x_patch_arrs = [x_patch_arr, x_patch_arr_2]
         resize_factors = [resize_factor, resize_factor_2]
         all_pred_boxes = []
@@ -104,10 +112,7 @@ class MixFormerOnline(BaseTracker):
 
         for k in range(2):
             
-            x_patch_arr = x_patch_arrs[k]
-            resize_factor = resize_factors[k]
-
-            search = self.preprocessor.process(x_patch_arr)
+            search = self.preprocessor.process(x_patch_arrs[k])
             with torch.no_grad():
                 if self.online_size==1:
                     out_dict, _ = self.network(self.template, self.online_template, search, run_score_head=True)
@@ -125,13 +130,14 @@ class MixFormerOnline(BaseTracker):
         pred_score = all_pred_scores[max_idx]
         self.pred_score = pred_score
         pred_boxes = all_pred_boxes[max_idx]
+        prev_box = prev_boxes[max_idx]
         
         resize_factor = resize_factors[max_idx]
 
             # Baseline: Take the mean of all pred boxes as the final result
         pred_box = (pred_boxes.mean(dim=0) * self.params.search_size / resize_factor).tolist()  # (cx, cy, w, h) [0,1]
             # get the final box result
-        self.state = clip_box(self.map_box_back(pred_box, resize_factor), H, W, margin=10)
+        self.state = clip_box(self.map_box_back(prev_box ,pred_box, resize_factor), H, W, margin=10)
 
         self.max_pred_score = self.max_pred_score * self.max_score_decay
 
@@ -176,8 +182,8 @@ class MixFormerOnline(BaseTracker):
         else:
             return {"target_bbox": self.state}
 
-    def map_box_back(self, pred_box: list, resize_factor: float):
-        cx_prev, cy_prev = self.state[0] + 0.5 * self.state[2], self.state[1] + 0.5 * self.state[3]
+    def map_box_back(self, prev_stat, pred_box: list, resize_factor: float):
+        cx_prev, cy_prev = prev_stat[0] + 0.5 * prev_stat[2], prev_stat[1] + 0.5 * prev_stat[3]
         cx, cy, w, h = pred_box
         half_side = 0.5 * self.params.search_size / resize_factor
         cx_real = cx + (cx_prev - half_side)

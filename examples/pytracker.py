@@ -234,7 +234,7 @@ class PyTracker:
             params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 5.05)
             self.tracker = MixFormerOnline(params, 'got10k_test')
             self.ethTracker=True
-            self.ratio_thresh=0.7
+            self.ratio_thresh=0.9
             self.interp_factor=1.0
             
         else:
@@ -272,7 +272,10 @@ class PyTracker:
     def doTrack(self, current_frame, verbose, est_loc, do_learning, viot=False):
     	if self.ethTracker:
             if viot:
-                out = self.tracker.track(current_frame, est_loc, do_learning=do_learning)
+                if self.tracker_type=='MIXFORMER_VIT':
+                    out = self.tracker.track(current_frame, last_state=self.last_bbox, FI=est_loc, do_learning=do_learning)
+                else:
+                    out = self.tracker.track(current_frame, est_loc, do_learning=do_learning)
             else:
         	    out = self.tracker.track(current_frame)
 
@@ -316,6 +319,7 @@ class PyTracker:
         est_loc=init_gt
         stop=False
         last_bbox=None
+        self.last_bbox=None
 
         for idx in range(len(self.frame_list)):
             if idx != 0:
@@ -326,7 +330,6 @@ class PyTracker:
                     bbox=last_bbox
                 else:
                     bbox=self.doTrack(current_frame, verbose, est_loc, psr/psr0>self.ratio_thresh and not stop, viot=self.viot)
-                    last_bbox=bbox
 
                 stop=bbox[2] > width or bbox[3] > height
 
@@ -346,6 +349,8 @@ class PyTracker:
 
                 ## estimating target location using kinematc model
                 if psr/psr0 > self.ratio_thresh:
+                    last_bbox=bbox
+                    self.last_bbox = last_bbox
                     est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, bbox)
                 else:
                     est_loc = kin.updateRect3D(self.states[idx,:], self.states[0,1:4], current_frame, None)
