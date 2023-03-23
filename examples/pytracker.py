@@ -234,14 +234,14 @@ class PyTracker:
             params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 5.05)
             self.tracker = MixFormerOnline(params, 'got10k_test')
             self.ethTracker=True
-            self.ratio_thresh=0.98
+            self.ratio_thresh=0.995
             self.interp_factor=1.0
             
         else:
             raise NotImplementedError
 
-        # self.viot = True
-        self.viot = False
+        self.viot = True
+        # self.viot = False
 
 
     def getETHTracker(self, name, params):
