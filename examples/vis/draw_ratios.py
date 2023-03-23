@@ -18,28 +18,28 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
 from lib.utils_ import get_ground_truthes_viot
 
-gts=get_ground_truthes_viot('/content/pyTrackers/dataset/VIOT/park_mavic_1')[109:190]
+gts=get_ground_truthes_viot('/content/pyTrackers/dataset/VIOT/park_mavic_1')[0:300]
 
 occ = np.loadtxt('/content/pyTrackers/results/occ_park_mavic_1.txt')
-kcf_hog = np.loadtxt('/content/pyTrackers/results/kcf_park_mavic_1.txt')
-ldes = np.loadtxt('/content/pyTrackers/results/ldes_park_mavic_1.txt')
-csrdcf = np.loadtxt('/content/pyTrackers/results/csrdcf_park_mavic_1.txt')
-strcf = np.loadtxt('/content/pyTrackers/results/strcf_park_mavic_1.txt')
-dimp50 = np.loadtxt('/content/pyTrackers/results/dimp50_park_mavic_1.txt')
-kys = np.loadtxt('/content/pyTrackers/results/kys_park_mavic_1.txt')
-tomp = np.loadtxt('/content/pyTrackers/results/tomp_park_mavic_1.txt')
-prdimp50 = np.loadtxt('/content/pyTrackers/results/prdimp50_park_mavic_1.txt')
-mixformer = np.loadtxt('/content/pyTrackers/results/mixformer_park_mavic_1.txt')
+# kcf_hog = np.loadtxt('/content/pyTrackers/results/kcf_hog_viot_park_mavic_1.txt')
+# ldes = np.loadtxt('/content/pyTrackers/results/ldes_viot_park_mavic_1.txt')
+# csrdcf = np.loadtxt('/content/pyTrackers/results/csrdcf_viot_park_mavic_1.txt')
+# strcf = np.loadtxt('/content/pyTrackers/results/strcf_viot_park_mavic_1.txt')
+dimp50 = np.loadtxt('/content/pyTrackers/results/dimp50_viot_park_mavic_1.txt')
+kys = np.loadtxt('/content/pyTrackers/results/kys_viot_park_mavic_1.txt')
+tomp = np.loadtxt('/content/pyTrackers/results/tomp_viot_park_mavic_1.txt')
+prdimp50 = np.loadtxt('/content/pyTrackers/results/prdimp50_viot_viot_park_mavic_1.txt')
+mixformer = np.loadtxt('/content/pyTrackers/results/mixformer_park_mavic_1_viot.txt')
 
-print('score_kcf ', 1 - np.mean( np.abs(1-occ - kcf_hog) ) )
-print('score_ldes ', 1 - np.mean( np.abs(1-occ - ldes) ) )
-print('score_csrdcf ', 1 - np.mean( np.abs(1-occ - csrdcf) ) )
-print('score_strcf ', 1 - np.mean( np.abs(1-occ - strcf) ) )
-print('score_dimp50 ', 1 - np.mean( np.abs(1-occ - dimp50) ) )
-print('score_kys ', 1 - np.mean( np.abs(1-occ - kys) ) )
-print('score_tomp ', 1 - np.mean( np.abs(1-occ - tomp) ) )
-print('score_prdimp50 ', 1 - np.mean( np.abs(1-occ - prdimp50) ) )
-print('score_mixformer ', 1 - np.mean( np.abs(1-occ - mixformer) ) )
+# print('score_kcf ', 1 - np.mean( np.abs(1-occ - kcf_hog) ) )
+# print('score_ldes ', 1 - np.mean( np.abs(1-occ - ldes) ) )
+# print('score_csrdcf ', 1 - np.mean( np.abs(1-occ - csrdcf) ) )
+# print('score_strcf ', 1 - np.mean( np.abs(1-occ - strcf) ) )
+print('score_dimp50 ', 1 - np.mean( np.abs(1-occ[:-1] - dimp50) ) )
+print('score_kys ', 1 - np.mean( np.abs(1-occ[:-1] - kys) ) )
+print('score_tomp ', 1 - np.mean( np.abs(1-occ[:-1] - tomp) ) )
+print('score_prdimp50 ', 1 - np.mean( np.abs(1-occ[:-1] - prdimp50) ) )
+print('score_mixformer ', 1 - np.mean( np.abs(1-occ[:-1] - mixformer) ) )
 
 plt.rcParams["figure.figsize"] = (20,6)
 plt.rcParams.update({'font.size': 14})
@@ -58,10 +58,10 @@ ax.plot(tomp, linewidth=2, label='ToMP')
 ax.plot(mixformer, linewidth=2, label='MixFormer')
 
 
-for i in range(0, 81, 10):
+for i in range(110, 189, 10):
 
     ax.axvline(x=i, ymin=0.0, ymax=1.0, color='gray', linewidth=1, linestyle='--')
-    img = cv.imread('/content/pyTrackers/dataset/VIOT/park_mavic_1/{:08}.jpg'.format(i+110))
+    img = cv.imread('/content/pyTrackers/dataset/VIOT/park_mavic_1/{:08}.jpg'.format(i))
     
     x_min = int( np.max([gts[i, 0] - gts[i, 2], 0]) )
     x_max = int( np.min([gts[i, 0] + 2*gts[i, 2], img.shape[1]-1]) )
@@ -81,8 +81,8 @@ for i in range(0, 81, 10):
 # plt.title(dataset_name + '')
 plt.xlabel('Image Number')
 ax.set_ylim(-1.8, 1.5)
-ax.set_xlim(-5, 95)
+ax.set_xlim(100, 190)
 plt.ylabel('psr/psr0')
-plt.legend()
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.grid()
 plt.savefig('VIOT_ratios_mixformer.pdf', format="pdf")
