@@ -7,18 +7,18 @@ except:
 
 if IN_COLAB:
     print("**** in colab ****")
-    if "/content/pyCFTrackers" not in sys.path:
+    if "/content/pyTrackers" not in sys.path:
         print("**** path not set ****")
-        sys.path.insert(0, "/content/pyCFTrackers")
+        sys.path.insert(0, "/content/pyTrackers")
         print(sys.path)
 
 import json
 import numpy as np
 import os
 import cv2
-from lib.utils import get_img_list
+from lib.utils_ import get_img_list
 from examples.vis.draw_plot import get_preds_by_name
-from lib.utils import get_thresh_success_pair,calAUC
+from lib.utils_ import get_thresh_success_pair,calAUC
 from examples.viotdataset_config import VIOTDatasetConfig
 
 def drawline(img,pt1,pt2,color,thickness=1,style='dotted',gap=8):
@@ -62,7 +62,7 @@ def drawrect(img,pt1,pt2,color,thickness=1,style='dotted'):
 
 def vis_results(dataset_dir,data_name):
     dataset_config=VIOTDatasetConfig()
-    f = open('../all_results.json', 'r')
+    f = open('../all_results_mixformer.json', 'r')
     results = json.load(f)
     if not data_name in results.keys():
         raise ValueError
@@ -77,6 +77,7 @@ def vis_results(dataset_dir,data_name):
     dimp50_preds = get_preds_by_name(data_all, 'tracker_dimp50_preds')
     prdimp50_preds = get_preds_by_name(data_all, 'tracker_prdimp50_preds')
     tomp_preds = get_preds_by_name(data_all, 'tracker_tomp_preds')
+    mixformer_preds = get_preds_by_name(data_all, 'tracker_mixformer_preds')
     kys_preds = get_preds_by_name(data_all, 'tracker_kys_preds')
 
     img_dir=os.path.join(dataset_dir,data_name)
@@ -95,6 +96,7 @@ def vis_results(dataset_dir,data_name):
     color_prdimp50=(0,0,255) #
     color_kys=(255,0,0) #
     color_tomp=(0,255,255) #
+    color_mixformer=(0,165,255) #
 
     writer=None
     for i in range(len(img_list)):
@@ -112,6 +114,7 @@ def vis_results(dataset_dir,data_name):
         dimp50_pred = dimp50_preds[i]
         prdimp50_pred = prdimp50_preds[i]
         tomp_pred = tomp_preds[i]
+        mixformer_pred = mixformer_preds[i]
         kys_pred = kys_preds[i]
         
         show_frame=drawrect(current_frame,(kcf_hog_pred[0],kcf_hog_pred[1]),
@@ -132,12 +135,15 @@ def vis_results(dataset_dir,data_name):
         show_frame=drawrect(show_frame,(prdimp50_pred[0],prdimp50_pred[1]),
                                  (prdimp50_pred[0]+prdimp50_pred[2],prdimp50_pred[1]+prdimp50_pred[3]),
                                  color_prdimp50,thickness=2)
-        show_frame=drawrect(show_frame,(csrdcf_pred[0],csrdcf_pred[1]),
-                                 (csrdcf_pred[0]+csrdcf_pred[2],csrdcf_pred[1]+csrdcf_pred[3]),
+        show_frame=drawrect(show_frame,(kys_pred[0],kys_pred[1]),
+                                 (kys_pred[0]+kys_pred[2],kys_pred[1]+kys_pred[3]),
                                  color_kys,thickness=2)
-        show_frame=drawrect(show_frame,(csrdcf_pred[0],csrdcf_pred[1]),
-                                 (csrdcf_pred[0]+csrdcf_pred[2],csrdcf_pred[1]+csrdcf_pred[3]),
+        show_frame=drawrect(show_frame,(tomp_pred[0],tomp_pred[1]),
+                                 (tomp_pred[0]+tomp_pred[2],tomp_pred[1]+tomp_pred[3]),
                                  color_tomp,thickness=2)
+        show_frame=drawrect(show_frame,(mixformer_pred[0],mixformer_pred[1]),
+                                 (mixformer_pred[0]+mixformer_pred[2],mixformer_pred[1]+mixformer_pred[3]),
+                                 color_mixformer,thickness=2)
 
         # threshes,kcf_success=get_thresh_success_pair(gts,kcf_hog_preds)
         # _,csk_success=get_thresh_success_pair(gts,csk_preds)
@@ -158,7 +164,7 @@ def vis_results(dataset_dir,data_name):
 
         imgs.append(show_frame)
 
-    f = open('../all_results_viot.json', 'r')
+    f = open('../all_results_mixformer_viot.json', 'r')
     results = json.load(f)
     if not data_name in results.keys():
         raise ValueError
@@ -173,6 +179,7 @@ def vis_results(dataset_dir,data_name):
     dimp50_preds = get_preds_by_name(data_all, 'tracker_dimp50_preds')
     prdimp50_preds = get_preds_by_name(data_all, 'tracker_prdimp50_preds')
     tomp_preds = get_preds_by_name(data_all, 'tracker_tomp_preds')
+    mixformer_preds = get_preds_by_name(data_all, 'tracker_mixformer_preds')
     kys_preds = get_preds_by_name(data_all, 'tracker_kys_preds')
 
     writer=None
@@ -191,6 +198,7 @@ def vis_results(dataset_dir,data_name):
         dimp50_pred = dimp50_preds[i]
         prdimp50_pred = prdimp50_preds[i]
         tomp_pred = tomp_preds[i]
+        mixformer_pred = mixformer_preds[i]
         kys_pred = kys_preds[i]
 
         try:
@@ -218,12 +226,15 @@ def vis_results(dataset_dir,data_name):
         show_frame=cv2.rectangle(show_frame,(prdimp50_pred[0],prdimp50_pred[1]),
                                  (prdimp50_pred[0]+prdimp50_pred[2],prdimp50_pred[1]+prdimp50_pred[3]),
                                  color_prdimp50,thickness=2)
-        show_frame=cv2.rectangle(show_frame,(csrdcf_pred[0],csrdcf_pred[1]),
-                                 (csrdcf_pred[0]+csrdcf_pred[2],csrdcf_pred[1]+csrdcf_pred[3]),
+        show_frame=cv2.rectangle(show_frame,(kys_pred[0],kys_pred[1]),
+                                 (kys_pred[0]+kys_pred[2],kys_pred[1]+kys_pred[3]),
                                  color_kys,thickness=2)
-        show_frame=cv2.rectangle(show_frame,(csrdcf_pred[0],csrdcf_pred[1]),
-                                 (csrdcf_pred[0]+csrdcf_pred[2],csrdcf_pred[1]+csrdcf_pred[3]),
+        show_frame=cv2.rectangle(show_frame,(tomp_pred[0],tomp_pred[1]),
+                                 (tomp_pred[0]+tomp_pred[2],tomp_pred[1]+tomp_pred[3]),
                                  color_tomp,thickness=2)
+        show_frame=cv2.rectangle(show_frame,(mixformer_pred[0],mixformer_pred[1]),
+                                 (mixformer_pred[0]+mixformer_pred[2],mixformer_pred[1]+mixformer_pred[3]),
+                                 color_mixformer,thickness=2)
 
         # threshes,kcf_success=get_thresh_success_pair(gts,kcf_hog_preds)
         # _,csk_success=get_thresh_success_pair(gts,csk_preds)
@@ -244,7 +255,7 @@ def vis_results(dataset_dir,data_name):
 
 
         if writer is None:
-            writer = cv2.VideoWriter('../../results/'+data_name+'_res.mp4', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 30,
+            writer = cv2.VideoWriter('../../results/VIOT/'+data_name+'_res.mp4', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 30,
                                      (show_frame.shape[1], show_frame.shape[0]))
         writer.write(show_frame)
         
@@ -252,7 +263,7 @@ def vis_results(dataset_dir,data_name):
 
 if __name__=='__main__':
 
-    vis_results('../../dataset/VIOT','soccerfield_mavic_4')
+    vis_results('../../dataset/VIOT','soccerfield_mavic_3')
 
 
 
