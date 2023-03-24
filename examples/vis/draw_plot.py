@@ -273,6 +273,6 @@ def draw_plot(results_json_path,datalist,dataset_name):
 
 
 if __name__=='__main__':
-    result_json_path='../all_results_mixformer.json'
+    result_json_path='../all_results_mixformer_viot.json'
 
     draw_plot(result_json_path,VIOT,'NEW')

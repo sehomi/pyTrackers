@@ -37,10 +37,10 @@ for file_name in dir_list:
     if ".txt" in file_name or ".mp4" in file_name:
         continue
 
-    if "viot" in file_name:
-        continue
-    # if not "viot" in file_name:
+    # if "viot" in file_name:
     #     continue
+    if not "viot" in file_name:
+        continue
 
     tracker = splitted_file_name[0]
     if splitted_file_name[1] == "viot":

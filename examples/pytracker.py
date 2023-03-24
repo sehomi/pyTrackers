@@ -231,11 +231,18 @@ class PyTracker:
             from lib.test.tracker.mixformer_vit_online import MixFormerOnline
             from lib.test.parameter.mixformer_vit_online import parameters
 
-            params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 5.05)
+            params = parameters('baseline', 'mixformer_vit_base_online.pth.tar', 4.0)
             self.tracker = MixFormerOnline(params, 'got10k_test')
             self.ethTracker=True
-            self.ratio_thresh=0.995
-            self.interp_factor=1.0
+            try:
+                self.ratio_thresh=dataset_config.params['MIXFORMER_VIT'][dataname][0]
+            except:
+                self.ratio_thresh=0.995
+
+            try:
+                self.interp_factor=dataset_config.params['MIXFORMER_VIT'][dataname][1]
+            except:
+                self.interp_factor=1.0
             
         else:
             raise NotImplementedError
@@ -273,7 +280,7 @@ class PyTracker:
     	if self.ethTracker:
             if viot:
                 # if self.tracker_type=='MIXFORMER_VIT':
-                #     out = self.tracker.track(current_frame, last_state=self.last_bbox, FI=est_loc, do_learning=do_learning)
+                #     out = self.tracker.track(current_frame, FI=est_loc, do_learning=True)
                 # else:
                 #     out = self.tracker.track(current_frame, est_loc, do_learning=do_learning)
                 out = self.tracker.track(current_frame, FI=est_loc, do_learning=do_learning)
