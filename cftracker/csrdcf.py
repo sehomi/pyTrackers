@@ -10,9 +10,9 @@ Python re-implementation of "Discriminative Correlation Filter with Channel and 
 import numpy as np
 import cv2
 from .base import BaseCF
-from lib.utils import cos_window
+from lib.utils_ import cos_window
 from lib.fft_tools import fft2,ifft2
-from lib.utils import gaussian2d_rolled_labels
+from lib.utils_ import gaussian2d_rolled_labels
 from .feature import extract_hog_feature,extract_cn_feature
 from .config import csrdcf_config
 from cftracker.scale_estimator import LPScaleEstimator,DSSTScaleEstimator

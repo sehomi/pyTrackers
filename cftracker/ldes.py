@@ -2,12 +2,12 @@ import numpy as np
 from numpy.matlib import repmat
 import cv2
 from scipy.ndimage import map_coordinates
-from lib.utils import cos_window,gaussian2d_rolled_labels
+from lib.utils_ import cos_window,gaussian2d_rolled_labels
 from lib.fft_tools import fft2,ifft2
 from cftracker.base import BaseCF
 from cftracker.feature import extract_hog_feature,extract_cn_feature,extract_cn_feature_byw2c
 from skimage.feature.peak import peak_local_max
-from lib.utils import APCE
+from lib.utils_ import APCE
 
 def mod_one(a, b):
     y = np.mod(a - 1, b) + 1

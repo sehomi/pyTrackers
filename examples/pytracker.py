@@ -4,23 +4,11 @@ import importlib
 import os
 from collections import OrderedDict
 from lib.utils_ import get_img_list,get_states_data,get_ground_truthes,get_ground_truthes_viot,APCE,PSR
-# from cftracker.mosse import MOSSE
-# from cftracker.csk import CSK
-# from cftracker.kcf import KCF
-# from cftracker.cn import CN
-# from cftracker.dsst import DSST
-# from cftracker.staple import Staple
-# from cftracker.dat import DAT
-# from cftracker.eco import ECO
-# from cftracker.bacf import BACF
-# from cftracker.csrdcf import CSRDCF
-# from cftracker.samf import SAMF
-# from cftracker.ldes import LDES
-# from cftracker.mkcfup import MKCFup
-# from cftracker.strcf import STRCF
-# from cftracker.mccth_staple import MCCTHStaple
-# from lib.eco.config import otb_deep_config,otb_hc_config
-# from cftracker.config import staple_config,ldes_config,dsst_config,csrdcf_config,mkcf_up_config,mccth_staple_config
+from cftracker.kcf import KCF
+from cftracker.csrdcf import CSRDCF
+from cftracker.ldes import LDES
+from cftracker.strcf import STRCF
+from cftracker.config import ldes_config,csrdcf_config
 
 from kinematics.camera_kinematics import CameraKinematics
 
@@ -53,31 +41,8 @@ class PyTracker:
 
         else:
             self.init_gt=self.gts[0]
-        if self.tracker_type == 'MOSSE':
-            self.tracker=MOSSE()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='CSK':
-            self.tracker=CSK()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='CN':
-            self.tracker=CN()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='DSST':
-            self.tracker=DSST(dsst_config.DSSTConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='Staple':
-            self.tracker=Staple(config=staple_config.StapleConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='Staple-CA':
-            self.tracker=Staple(config=staple_config.StapleCAConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='KCF_CN':
-            self.tracker=KCF(features='cn',kernel='gaussian')
-            self.ratio_thresh=0.8
-        elif self.tracker_type=='KCF_GRAY':
-            self.tracker=KCF(features='gray',kernel='gaussian')
-            self.ratio_thresh=0.8
-        elif self.tracker_type=='KCF_HOG':
+
+        if self.tracker_type=='KCF_HOG':
             self.tracker=KCF(features='hog',kernel='gaussian')
             try:
                 self.ratio_thresh=dataset_config.params['KCF_HOG'][dataname][0]
@@ -89,33 +54,6 @@ class PyTracker:
             except:
                 self.interp_factor=0.3
 
-        elif self.tracker_type=='DCF_GRAY':
-            self.tracker=KCF(features='gray',kernel='linear')
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='DCF_HOG':
-            self.tracker=KCF(features='hog',kernel='linear')
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='DAT':
-            self.tracker=DAT()
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='ECO-HC':
-            self.tracker=ECO(config=otb_hc_config.OTBHCConfig())
-            self.ratio_thresh=0.5
-        elif self.tracker_type=='ECO':
-            self.tracker=ECO(config=otb_deep_config.OTBDeepConfig())
-            try:
-                self.ratio_thresh=dataset_config.params['ECO'][dataname][0]
-            except:
-                self.ratio_thresh=0.5
-
-            try:
-                self.interp_factor=dataset_config.params['ECO'][dataname][1]
-            except:
-                self.interp_factor=0.3
-
-        elif self.tracker_type=='BACF':
-            self.tracker=BACF()
-            self.ratio_thresh=0.2
         elif self.tracker_type=='CSRDCF':
             self.tracker=CSRDCF(config=csrdcf_config.CSRDCFConfig())
             try:
@@ -128,12 +66,6 @@ class PyTracker:
             except:
                 self.interp_factor=0.3
 
-        elif self.tracker_type=='CSRDCF-LP':
-            self.tracker=CSRDCF(config=csrdcf_config.CSRDCFLPConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='SAMF':
-            self.tracker=SAMF()
-            self.ratio_thresh=0.1
         elif self.tracker_type=='LDES':
             self.tracker=LDES(ldes_config.LDESDemoLinearConfig())
             try:
@@ -146,15 +78,6 @@ class PyTracker:
             except:
                 self.interp_factor=0.3
 
-        elif self.tracker_type=='DSST-LP':
-            self.tracker=DSST(dsst_config.DSSTLPConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='MKCFup':
-            self.tracker=MKCFup(config=mkcf_up_config.MKCFupConfig())
-            self.ratio_thresh=0.1
-        elif self.tracker_type=='MKCFup-LP':
-            self.tracker=MKCFup(config=mkcf_up_config.MKCFupLPConfig())
-            self.ratio_thresh=0.1
         elif self.tracker_type=='STRCF':
             self.tracker=STRCF()
             try:
@@ -166,14 +89,6 @@ class PyTracker:
                 self.interp_factor=dataset_config.params['STRCF'][dataname][1]
             except:
                 self.interp_factor=0.3
-
-        elif self.tracker_type=='MCCTH-Staple':
-            self.tracker=MCCTHStaple(config=mccth_staple_config.MCCTHOTBConfig())
-            self.ratio_thresh=0.1
-
-        elif self.tracker_type=='MCCTH':
-            self.tracker=MCCTH(config=mccth_config.MCCTHConfig())
-            self.ratio_thresh=0.1
 
         elif self.tracker_type=='DIMP50':
             self.tracker=self.getETHTracker('dimp','dimp50')

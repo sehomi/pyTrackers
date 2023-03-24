@@ -1,7 +1,7 @@
 
 import numpy as np
 import cv2
-from lib.utils import cos_window,gaussian2d_rolled_labels
+from lib.utils_ import cos_window,gaussian2d_rolled_labels
 from lib.fft_tools import fft2,ifft2
 from .base import BaseCF
 from .feature import extract_hog_feature,extract_cn_feature
